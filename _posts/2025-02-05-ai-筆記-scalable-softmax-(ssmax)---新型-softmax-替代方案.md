@@ -1,9 +1,11 @@
 ---
+
 layout: post
 title: "Scalable-Softmax (SSMax) - 新型 Softmax 替代方案"
-date: 2025-02-05 10:00:00 +0800
+P25-02-05 10:00:00 +0800
 math: true
 categories: [ai-筆記]
+
 ---
 
 📌 文章來源：arXiv:2501.19399v1
@@ -20,7 +22,15 @@ SSMax 的設計目標是 避免注意力衰退，並提高長度泛化能力。
 
 ### 🔹 Softmax 公式
 
+$$
+z_i = \frac{e^{z_i}}{\sum_{j=1}^n e^{z_j}}
+$$
+
 ### 🔹 SSMax 公式
+
+$$
+z_i \mapsto \frac{n^{sz_i}}{\sum_{j=1}^n n^{sz_j}} = \frac{e^{(s\log n)z_i}}{\sum_{j=1}^n e^{(s\log n)z_j}}
+$$
 
 ## 🔹 SSMax 的優勢
 

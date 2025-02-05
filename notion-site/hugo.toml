@@ -1,0 +1,4 @@
+baseURL = 'https://jimmyhua123.github.io/jimmyhua_notion.github.io/'
+languageCode = 'en-us'
+title = 'My New Hugo Site'
+theme = "PaperMod"

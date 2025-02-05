@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import datetime
+import re
 
 # ----------------------------------------------------------------------
 # 1. 讀取 Notion Token & Page ID 設定
@@ -121,24 +122,14 @@ def block_to_markdown(block: dict) -> str:
 # 5. 遞迴函式：parse_and_export_recursively()
 # ----------------------------------------------------------------------
 def parse_and_export_recursively(page_id: str, parent_slug: str = None):
-    """
-    一邊遞迴處理，一邊匯出 Markdown 檔：
-      1. 取得當前頁面標題 + blocks
-      2. 非 child_page block -> 拼成 Markdown
-      3. 輸出成一篇 _posts/xxx.md
-      4. 若發現 child_page -> 對其做遞迴
-    parent_slug: 用來把父層 slug 帶下去 (可做分類等)
-    """
+    # 取得頁面標題
+    page_title = retrieve_page_title(page_id)
 
-    # 1. 先取得頁面標題
-    page_title = retrieve_page_title(page_id)  # or "block['child_page']['title']"
-
-    # 2. 取得頁面 blocks
+    # 取得頁面內容 Blocks
     blocks = fetch_notion_blocks(page_id)
     page_markdown_parts = []
     child_pages = []
 
-    # 分開「非子頁面」跟「子頁面」
     for block in blocks:
         btype = block.get("type", "")
         if btype == "child_page":
@@ -146,44 +137,98 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
         else:
             page_markdown_parts.append(block_to_markdown(block))
 
+    # 合成 Markdown 內容
     page_markdown = "".join(page_markdown_parts)
 
-    # 3. 在 _posts/ 寫檔
-    if not os.path.exists("_posts"):
-        os.makedirs("_posts")
-
-    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    # 生成 slug
+    # 確定 slug
     slug = page_title.replace(" ", "-").lower()
     if parent_slug:
         slug = f"{parent_slug}-{slug}"
 
-    filename = f"_posts/{today_str}-{slug}.md"
+    # 使用 upsert_post_with_date_update() 更新檔案
+    upsert_post_with_date_update(slug, page_title, page_markdown, categories=["NotionExport"])
 
-    with open(filename, "w", encoding="utf-8") as fp:
-        fp.write("---\n")
-        fp.write("layout: post\n")
-        fp.write(f"title: \"{page_title}\"\n")
-        fp.write(f"date: {today_str} 10:00:00 +0800\n")
-        fp.write("math: true\n")  # **啟用數學公式**
-        if parent_slug:
-            fp.write(f"categories: [{parent_slug}]\n")
-        else:
-            fp.write("categories: [NotionExport]\n")
-        fp.write("---\n\n")
-        fp.write(page_markdown)
-
-    print(f"✅ 已輸出: {filename}")
-
-    # 4. 子頁面 => 遞迴
+    # 處理子頁面
     for child_block in child_pages:
         child_id = child_block["id"]
-        child_title = child_block["child_page"]["title"]  # 也可用 retrieve_page_title
+        child_title = child_block["child_page"]["title"]
         parse_and_export_recursively(child_id, parent_slug=slug)
 
 
+
+def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
+    """
+    將 new_markdown 寫入 _posts/yyyy-mm-dd-{slug}.md。
+    若檔案已存在，且內文有變動，則更新 front matter 的 date 為今日。
+    """
+    if not os.path.exists("_posts"):
+        os.makedirs("_posts")
+
+    # 預設每篇文章檔名中的日期, 你可以用 old front matter date 也可
+    # 或一律用今天, 後面會再自動更新 date: 依變動判斷
+    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    filename = f"_posts/{today_str}-{slug}.md"
+    
+    # 預設 front matter
+    categories_str = "NotionExport" if not categories else " ".join(categories)
+    # 你也可以多個 categories: [cat1, cat2] 的 YAML 寫法
+
+    new_front_matter = f"""---
+layout: post
+title: "{title}"
+date: {today_str} 10:00:00 +0800
+categories: [{categories_str}]
+---
+"""
+
+    new_full_content = new_front_matter + "\n" + new_markdown
+
+    if not os.path.exists(filename):
+        # 檔案不存在 => 全新文章 => 直接寫檔
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(new_full_content)
+        print(f"[NEW] Created file: {filename}")
+    else:
+        # 檔案已存在 => 讀取舊檔, 分析是否有更新
+        with open(filename, "r", encoding="utf-8") as f:
+            old_full_content = f.read()
+
+        # 分離舊 front matter 與舊內文
+        # 例如用簡單正則: ^---(.*?)--- 來擷取 front matter
+        # 這裡是示範, 你可以用 ruamel.yaml 或 pyyaml 做更嚴謹的解析
+        match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
+        if match:
+            old_front = match.group(1)
+            old_body = match.group(2).strip()
+        else:
+            # 如果沒找到 front matter, 全部當作 body
+            old_front = ""
+            old_body = old_full_content.strip()
+
+        # 比對 new_markdown vs old_body
+        if old_body != new_markdown.strip():
+            # 有變動 => 更新 date
+            new_today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+            updated_front_matter = re.sub(
+                r"(date:\s*)(.*)",
+                rf"\1{new_today_str} 10:00:00 +0800",
+                old_front
+            )
+            # 如果你要保留原本 front matter 的其他欄位, 只改 date
+            # 這裡用正則簡易替換, 但需確保 date: 這行存在
+
+            # 產生新的全文
+            new_old_front = f"---\n{updated_front_matter}\n---\n\n"
+            updated_full = new_old_front + new_markdown
+
+            with open(filename, "w", encoding="utf-8") as f:
+                f.write(updated_full)
+            print(f"[UPDATE] {filename} content changed, date updated to {new_today_str}")
+        else:
+            print(f"[NO CHANGE] {filename} remains the same.")
+
 # ----------------------------------------------------------------------
-# 6. Main：指定最上層頁面ID，開始遞迴
+# 7. Main：指定最上層頁面ID，開始遞迴
 # ----------------------------------------------------------------------
 def main():
     parse_and_export_recursively(ROOT_PAGE_ID)

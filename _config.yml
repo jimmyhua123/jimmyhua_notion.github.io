@@ -24,6 +24,8 @@ pagination:
   enabled: true
   per_page: 5
 
+paginate_path: "/page:num/"
+
 # 例如想開啟 TOC、MathJax 功能，可在各篇文章的 front matter 中設定
 #  layout: post
 #  toc: true

@@ -25,7 +25,7 @@ jobs:
       env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       run: |
-        python notion_recursive_export.py
+        python notion_to_markdown.py
 
     - name: Commit and push changes
       run: |

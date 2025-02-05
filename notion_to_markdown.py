@@ -169,17 +169,21 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
     filename = f"_posts/{today_str}-{slug}.md"
     
-    # 預設 front matter
-    categories_str = "NotionExport" if not categories else " ".join(categories)
-    # 你也可以多個 categories: [cat1, cat2] 的 YAML 寫法
+    # 避免標題中的雙引號問題
+    safe_title = title.replace('"', '\\"')  # 確保雙引號被正確轉義
 
+    # 確保 categories 是正確的 YAML 列表格式
+    categories_str = ", ".join([f'"{c}"' for c in categories]) if categories else '"NotionExport"'
+
+    # 生成正確的 front matter 格式
     new_front_matter = f"""---
-layout: post
-title: "{title}"
-date: {today_str} 10:00:00 +0800
-categories: [{categories_str}]
----
-"""
+    layout: post
+    title: "{safe_title}"
+    date: {today_str} 10:00:00 +0800
+    categories: [{categories_str}]
+    ---
+    """
+
 
     new_full_content = new_front_matter + "\n" + new_markdown
 

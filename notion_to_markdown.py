@@ -1,153 +1,189 @@
+import os
 import json
 import requests
+import datetime
 
-# 讀取配置檔案
-with open("config.json", "r") as file:
-    config = json.load(file)
+# ----------------------------------------------------------------------
+# 1. 讀取 Notion Token & Page ID 設定
+# ----------------------------------------------------------------------
+with open("config.json", "r", encoding="utf-8") as f:
+    config = json.load(f)
 
-NOTION_TOKEN = config["notion_token"]  # 請替換為你的 Notion Integration Token
-PAGE_ID = "166fbb857f9e80eba96ef0091d6ce244"  # 請替換為你的 Notion Page ID
+NOTION_TOKEN = os.environ["NOTION_TOKEN"] 
+ROOT_PAGE_ID = "166fbb857f9e80eba96ef0091d6ce244"  # 你的最上層 Notion Page ID
 
-# 設定 Notion API URL 和標頭
 HEADERS = {
     "Authorization": f"Bearer {NOTION_TOKEN}",
-    "Content-Type": "application/json",
     "Notion-Version": "2022-06-28"
 }
 
-def fetch_notion_blocks(block_id: str) -> dict:
+# ----------------------------------------------------------------------
+# 2. 取得頁面標題 (選擇用 retrieve_page，或直接從 child_page["title"] 取)
+# ----------------------------------------------------------------------
+def retrieve_page_title(page_id: str) -> str:
     """
-    向 Notion API 請求指定 block_id 底下的所有子區塊，並自動處理分頁 (pagination)。
-    最終回傳形式與官方結構類似，如 {"results": [...]}。
+    嘗試從 Notion `retrieve_page` API 取得該頁面真正標題。
+    若結構複雜，請依實際情況修改。
     """
-    all_results = []
+    url = f"https://api.notion.com/v1/pages/{page_id}"
+    res = requests.get(url, headers=HEADERS)
+    data = res.json()
+    # 這邊假設屬性名稱就是 "title"（若是資料庫頁面有時不同）
+    try:
+        title_obj = data["properties"]["title"]["title"]
+        if title_obj:
+            return title_obj[0]["plain_text"]
+    except:
+        pass
+    return "Untitled"
+
+
+# ----------------------------------------------------------------------
+# 3. 取得某頁面下的所有區塊 (含分頁處理)
+# ----------------------------------------------------------------------
+def fetch_notion_blocks(page_id: str) -> list:
+    """
+    回傳所有 blocks（list），不包含子頁面下層
+    """
+    all_blocks = []
     base_url = "https://api.notion.com/v1/blocks"
-    url = f"{base_url}/{block_id}/children"
+    url = f"{base_url}/{page_id}/children"
     params = {}
 
     while True:
-        response = requests.get(url, headers=HEADERS, params=params)
-        data = response.json()
-
-        # 如果需要除錯，可以 print(data) 檢查是否拿到正確的 JSON
+        resp = requests.get(url, headers=HEADERS, params=params)
+        data = resp.json()
         results = data.get("results", [])
-        all_results.extend(results)
+        all_blocks.extend(results)
 
-        # 檢查是否有下一頁
         if data.get("has_more"):
             params["start_cursor"] = data["next_cursor"]
         else:
             break
 
-    # 為了與原程式裡 "main_content" 之後使用 .get("results") 一致，這裡回傳相同結構
-    return {"results": all_results}
+    return all_blocks
 
 
+# ----------------------------------------------------------------------
+# 4. 將單一 block 轉成 Markdown（忽略 child_page）
+# ----------------------------------------------------------------------
 def block_to_markdown(block: dict) -> str:
     """
-    將單一 Notion block 轉成 Markdown 格式。
-    若偵測到 child_page，則遞迴呼叫 fetch_notion_blocks() 取得其下層區塊，並繼續轉換。
+    僅示範最常見的 paragraph, heading, etc.
+    你可將你原本的轉換邏輯複製來這裡
     """
-    block_type = block.get("type", "")
-    try:
-        if block_type == "paragraph":
-            texts = block[block_type].get("rich_text", [])
-            paragraph_text = "".join(t.get("plain_text", "") for t in texts)
-            return paragraph_text + "\n\n"
+    btype = block.get("type", "")
+    if btype == "paragraph":
+        texts = block[btype].get("rich_text", [])
+        paragraph_text = "".join(t.get("plain_text", "") for t in texts)
+        return paragraph_text + "\n\n"
 
-        elif block_type == "heading_1":
-            texts = block[block_type].get("rich_text", [])
-            heading_text = "".join(t.get("plain_text", "") for t in texts)
-            return f"# {heading_text}\n\n"
+    elif btype == "heading_1":
+        texts = block[btype].get("rich_text", [])
+        heading_text = "".join(t.get("plain_text", "") for t in texts)
+        return f"# {heading_text}\n\n"
 
-        elif block_type == "heading_2":
-            texts = block[block_type].get("rich_text", [])
-            heading_text = "".join(t.get("plain_text", "") for t in texts)
-            return f"## {heading_text}\n\n"
+    elif btype == "heading_2":
+        texts = block[btype].get("rich_text", [])
+        heading_text = "".join(t.get("plain_text", "") for t in texts)
+        return f"## {heading_text}\n\n"
 
-        elif block_type == "heading_3":
-            texts = block[block_type].get("rich_text", [])
-            heading_text = "".join(t.get("plain_text", "") for t in texts)
-            return f"### {heading_text}\n\n"
+    elif btype == "heading_3":
+        texts = block[btype].get("rich_text", [])
+        heading_text = "".join(t.get("plain_text", "") for t in texts)
+        return f"### {heading_text}\n\n"
 
-        elif block_type == "bulleted_list_item":
-            texts = block[block_type].get("rich_text", [])
-            list_text = "".join(t.get("plain_text", "") for t in texts)
-            return f"- {list_text}\n"
+    elif btype == "bulleted_list_item":
+        texts = block[btype].get("rich_text", [])
+        list_text = "".join(t.get("plain_text", "") for t in texts)
+        return f"- {list_text}\n"
 
-        elif block_type == "numbered_list_item":
-            texts = block[block_type].get("rich_text", [])
-            list_text = "".join(t.get("plain_text", "") for t in texts)
-            return f"1. {list_text}\n"
-        elif block_type == "equation":
-            equation_text = block[block_type].get("expression", "")
-            return f"$$\n{equation_text}\n$$\n\n"
+    elif btype == "numbered_list_item":
+        texts = block[btype].get("rich_text", [])
+        list_text = "".join(t.get("plain_text", "") for t in texts)
+        return f"1. {list_text}\n"
 
-        elif block_type == "quote":
-            texts = block[block_type].get("rich_text", [])
-            quote_text = "".join(t.get("plain_text", "") for t in texts)
-            return f"> {quote_text}\n\n"
+    # 若遇到 child_page，就不在這裡轉 Markdown，
+    # 而是交給外層做遞迴，以產生新的文章檔案
+    if btype == "child_page":
+        return ""
 
-        elif block_type == "code":
-            language = block[block_type].get("language", "")
-            texts = block[block_type].get("rich_text", [])
-            code_content = "".join(t.get("plain_text", "") for t in texts)
-            return f"```{language}\n{code_content}\n```\n\n"
+    # ... 其餘像 code, image, divider, quote 都可自行加入
+    # ... 這裡省略
 
-        elif block_type == "divider":
-            return "---\n\n"
+    return ""
 
-        elif block_type == "image":
-            # 判斷是 external 還是 file
-            if "external" in block[block_type]:
-                image_url = block[block_type]["external"]["url"]
-            else:
-                image_url = block[block_type]["file"]["url"]
-            return f"![Image]({image_url})\n\n"
 
-        elif block_type == "child_page":
-            # 代表子頁面
-            page_title = block["child_page"]["title"]
-            child_page_id = block["id"].replace("-", "")
-            page_url = f"https://www.notion.so/{child_page_id}"
+# ----------------------------------------------------------------------
+# 5. 遞迴函式：parse_and_export_recursively()
+# ----------------------------------------------------------------------
+def parse_and_export_recursively(page_id: str, parent_slug: str = None):
+    """
+    一邊遞迴處理，一邊匯出 Markdown 檔：
+      1. 取得當前頁面標題 + blocks
+      2. 非 child_page block -> 拼成 Markdown
+      3. 輸出成一篇 _posts/xxx.md
+      4. 若發現 child_page -> 對其做遞迴
+    parent_slug: 用來把父層 slug 帶下去 (可做分類等)
+    """
 
-            child_blocks_data = fetch_notion_blocks(block["id"])
-            child_markdown = f"## 子頁面: [{page_title}]({page_url})\n\n"
-            
-            # 遞迴處理子頁面裡的所有區塊
-            for cb in child_blocks_data.get("results", []):
-                child_markdown += block_to_markdown(cb)
-            
-            return child_markdown
+    # 1. 先取得頁面標題
+    page_title = retrieve_page_title(page_id)  # or "block['child_page']['title']"
 
+    # 2. 取得頁面 blocks
+    blocks = fetch_notion_blocks(page_id)
+    page_markdown_parts = []
+    child_pages = []
+
+    # 分開「非子頁面」跟「子頁面」
+    for block in blocks:
+        btype = block.get("type", "")
+        if btype == "child_page":
+            child_pages.append(block)
         else:
-            # 如果遇到尚未支援的 block type
-            return f"<!-- Unsupported block type: {block_type} -->\n\n"
+            page_markdown_parts.append(block_to_markdown(block))
 
-    except KeyError:
-        # 某些區塊資料結構不齊全
-        return f"<!-- Error parsing block type: {block_type} -->\n\n"
+    page_markdown = "".join(page_markdown_parts)
+
+    # 3. 在 _posts/ 寫檔
+    if not os.path.exists("_posts"):
+        os.makedirs("_posts")
+
+    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    # 生成 slug
+    slug = page_title.replace(" ", "-").lower()
+    if parent_slug:
+        slug = f"{parent_slug}-{slug}"
+
+    filename = f"_posts/{today_str}-{slug}.md"
+
+    with open(filename, "w", encoding="utf-8") as fp:
+        fp.write("---\n")
+        fp.write("layout: post\n")
+        fp.write(f"title: \"{page_title}\"\n")
+        fp.write(f"date: {today_str} 10:00:00 +0800\n")
+        if parent_slug:
+            fp.write(f"categories: [{parent_slug}]\n")
+        else:
+            fp.write("categories: [NotionExport]\n")
+        fp.write("---\n\n")
+        fp.write(page_markdown)
+
+    print(f"✅ 已輸出: {filename}")
+
+    # 4. 子頁面 => 遞迴
+    for child_block in child_pages:
+        child_id = child_block["id"]
+        child_title = child_block["child_page"]["title"]  # 也可用 retrieve_page_title
+        parse_and_export_recursively(child_id, parent_slug=slug)
 
 
-def save_to_markdown(content: str, file_name="output.md"):
-    """將內容儲存為 Markdown 文件"""
-    with open(file_name, "w", encoding="utf-8") as file:
-        file.write(content)
-    print(f"✅ Markdown 文件已儲存為 {file_name}")
-
-
+# ----------------------------------------------------------------------
+# 6. Main：指定最上層頁面ID，開始遞迴
+# ----------------------------------------------------------------------
 def main():
-    # 獲取主頁面內容
-    main_content = fetch_notion_blocks(PAGE_ID)
-    markdown_content = ""
-
-    if main_content:
-        for block in main_content["results"]:
-            markdown_content += block_to_markdown(block)
-
-    # 將轉換好的 Markdown 儲存到本地
-    save_to_markdown(markdown_content, "output.md")
-
+    parse_and_export_recursively(ROOT_PAGE_ID)
+    print("🎉 全部頁面（含子頁面）匯出完成！")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,6 @@
+# 排除 Python cache
+__pycache__/
+*.pyc
+
+# 排除 .env 或 config.json（你若不想洩漏 token 就不要直接上傳）
+# config.json

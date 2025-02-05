@@ -2,7 +2,7 @@
 
 layout: post
 title: "Scalable-Softmax (SSMax) - 新型 Softmax 替代方案"
-P25-02-05 10:00:00 +0800
+date: 2025-02-05 10:00:00 +0800
 math: true
 categories: [ai-筆記]
 

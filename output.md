@@ -1,9 +1,3 @@
----
-title: "Output Page"
-date: 2025-02-05T12:00:00+00:00
-draft: false
----
-
 ## 子頁面: [Scalable-Softmax (SSMax) - 新型 Softmax 替代方案](https://www.notion.so/190fbb857f9e809a90c6ec413212232c)
 
 📌 文章來源：arXiv:2501.19399v1

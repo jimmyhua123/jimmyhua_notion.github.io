@@ -1,4 +1,4 @@
 title: "My Notion Export"
 description: "Notion blocks export to GitHub Pages"
-theme: jekyll-theme-Not Pure Poole  # 可以換你想要的 theme
+theme: jekyll-theme-Slate  # 可以換你想要的 theme
 markdown: kramdown

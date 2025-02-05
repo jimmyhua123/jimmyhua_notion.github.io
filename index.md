@@ -1,4 +1,5 @@
 ---
 layout: home
-title: "Home"     # 可自行改
+title: "Home"
+paginate: true
 ---

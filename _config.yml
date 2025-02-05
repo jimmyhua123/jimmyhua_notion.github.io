@@ -6,6 +6,7 @@ remote_theme: vszhub/not-pure-poole
 # 這裡必須啟用 jekyll-remote-theme plugin，才能載入第三方主題
 plugins:
   - jekyll-remote-theme
+  - jekyll-paginate
   
 future: true
 math: true
@@ -19,9 +20,9 @@ math: true
 #   - jekyll-sitemap
 
 # 其它可放主題的自訂參數，例如
-# pagination:
-#   enabled: true
-#   per_page: 5
+pagination:
+  enabled: true
+  per_page: 5
 
 # 例如想開啟 TOC、MathJax 功能，可在各篇文章的 front matter 中設定
 #  layout: post

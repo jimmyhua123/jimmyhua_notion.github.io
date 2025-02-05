@@ -1,4 +1,31 @@
 title: "My Notion Export"
-description: "Notion blocks export to GitHub Pages"
-theme: jekyll-theme-Slate  # 可以換你想要的 theme
-markdown: kramdown
+description: "Blog powered by Not Pure Poole"
+# 使用 remote_theme 指定外部主題
+remote_theme: vszhub/not-pure-poole
+
+# 這裡必須啟用 jekyll-remote-theme plugin，才能載入第三方主題
+plugins:
+  - jekyll-remote-theme
+  
+# 如果你想使用文章分頁、RSS feed、SEO、Sitemap 等功能，也可一併加上（皆為 GitHub Pages 白名單可用）
+# plugins:
+#   - jekyll-remote-theme
+#   - jekyll-paginate
+#   - jekyll-feed
+#   - jekyll-seo-tag
+#   - jekyll-sitemap
+
+# 其它可放主題的自訂參數，例如
+# pagination:
+#   enabled: true
+#   per_page: 5
+
+# 例如想開啟 TOC、MathJax 功能，可在各篇文章的 front matter 中設定
+#  layout: post
+#  toc: true
+#  math: true
+
+exclude:
+  - config.json
+  - notion_to_markdown.py
+  - test_notion_api.py

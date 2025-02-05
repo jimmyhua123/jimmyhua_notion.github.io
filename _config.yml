@@ -1,4 +1,4 @@
-title: "My Notion test Export"
+title: "My Notion  Export"
 description: "Blog powered by Not Pure Poole"
 # 使用 remote_theme 指定外部主題
 remote_theme: vszhub/not-pure-poole
@@ -8,8 +8,8 @@ plugins:
   - jekyll-remote-theme
   
 future: true
-math: true
-layout: post
+
+
 # 如果你想使用文章分頁、RSS feed、SEO、Sitemap 等功能，也可一併加上（皆為 GitHub Pages 白名單可用）
 # plugins:
 #   - jekyll-remote-theme

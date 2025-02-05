@@ -92,6 +92,9 @@ def block_to_markdown(block: dict) -> str:
         texts = block[btype].get("rich_text", [])
         heading_text = "".join(t.get("plain_text", "") for t in texts)
         return f"### {heading_text}\n\n"
+    elif btype == "equation":
+        equation_text = block[btype].get("expression", "")
+        return f"$$\n{equation_text}\n$$\n\n"
 
     elif btype == "bulleted_list_item":
         texts = block[btype].get("rich_text", [])
@@ -162,6 +165,7 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
         fp.write("layout: post\n")
         fp.write(f"title: \"{page_title}\"\n")
         fp.write(f"date: {today_str} 10:00:00 +0800\n")
+        fp.write("math: true\n")  # **啟用數學公式**
         if parent_slug:
             fp.write(f"categories: [{parent_slug}]\n")
         else:

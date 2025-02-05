@@ -1,7 +1,5 @@
 ---
-layout: home
-title: "Home"
-pagination: true
+layout: archive-dates
+title: "All by Dates"
+permalink: /
 ---
-
-這裡也可以放一些簡介文字 (Optional)

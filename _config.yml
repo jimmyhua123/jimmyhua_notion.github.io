@@ -1,7 +1,9 @@
 # 站點基本資訊
 title: "Jimmy Hua's Notion Export"
 description: "Blog powered by Not Pure Poole"
-url: "https://jimmyhua123.github.io/jimmyhua_notion.github.io/"
+url: "https://jimmyhua123.github.io"
+baseurl: "/jimmyhua_notion.github.io"   # 若你的網站路徑帶有 repo 名稱
+
 avatar: "/avatar.jpeg"            # 若你的頭像檔案實際在 /assets/images/avatar.jpeg，請改成 /assets/images/avatar.jpeg
 cover_image: "/bg.jpg"           # 若有背景圖，路徑同上
 permalink: pretty

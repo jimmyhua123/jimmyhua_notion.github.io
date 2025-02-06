@@ -232,7 +232,7 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
 
 def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     """
-    只有當內容有變動時才更新文章，且保留原發佈日期
+    只有當內容有變動時才更新文章，並確保 front matter（YAML 區塊）完整
     """
     if not os.path.exists("_posts"):
         os.makedirs("_posts")
@@ -251,30 +251,41 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     # 提取舊的 front matter 和內容
     match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
     if match:
-        old_front = match.group(1)
+        old_front = match.group(1).strip()
         old_body = match.group(2).strip()
     else:
         old_front = ""
         old_body = old_full_content.strip()
 
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    
-    # 🔍 Debug：檢查是否成功讀取 `old_front`
-    print(f"🔍 舊 front matter:\n{old_front}")
 
-    # 確保 `date:` 存在，並強制替換錯誤格式的日期
-    if "date:" in old_front:
-        updated_front_matter = re.sub(r"(date:\s*)(\d{4}-\d{2}-\d{2}.*)", rf"\1{today_str} 10:00:00 +0800", old_front)
-    else:
-        updated_front_matter = old_front.strip() + f"\ndate: {today_str} 10:00:00 +0800"
+    # **確保 front matter 欄位完整**
+    front_matter_dict = {
+        "layout": "post",
+        "title": f'"{title}"',
+        "date": f"{today_str} 10:00:00 +0800",
+        "categories": categories if categories else ["NotionExport"],
+        "math": "true"
+    }
 
-    # 🔍 Debug：檢查 `date:` 是否正確
-    print(f"✅ 更新後的 front matter:\n{updated_front_matter}")
+    # 如果舊的 front matter 存在，解析它
+    if old_front:
+        for line in old_front.split("\n"):
+            key, *value = line.split(":", 1)
+            key = key.strip()
+            if value:
+                front_matter_dict[key] = value[0].strip()
 
-    new_old_front = f"---\n{updated_front_matter}\n---\n\n"
-    updated_full = new_old_front + new_markdown
+    # **更新 `date:`**
+    front_matter_dict["date"] = f"{today_str} 10:00:00 +0800"
 
-    # 只有當內文變更時才更新 `date`
+    # **轉換回 YAML 格式**
+    updated_front_matter = "---\n" + "\n".join(f"{key}: {value}" for key, value in front_matter_dict.items()) + "\n---\n"
+
+    # **完整 Markdown 內容**
+    updated_full = updated_front_matter + "\n" + new_markdown.strip() + "\n"
+
+    # **只有當內文變更時才更新 `date`**
     if old_body != new_markdown.strip():
         with open(filename, "w", encoding="utf-8") as f:
             f.write(updated_full)

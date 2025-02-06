@@ -94,7 +94,7 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
     return "".join(md_text_parts)
 
 
-def block_to_markdown(block: dict) -> str:
+def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
     """
     將單一個 notion block 轉為 Markdown 的字串。
     僅示範常見的 paragraph, heading, bulleted_list_item, numbered_list_item, 
@@ -102,7 +102,6 @@ def block_to_markdown(block: dict) -> str:
     如需 child_page, child_database 則視情況自行處理。
     """
     btype = block.get("type", "")
-
     # 1. 段落 paragraph
     if btype == "paragraph":
         texts = block[btype].get("rich_text", [])
@@ -166,9 +165,8 @@ def block_to_markdown(block: dict) -> str:
         language = block[btype].get("language", "plaintext")
         return f"```{language}\n{code_text}\n```\n\n"
 
-
     # 6. 圖片 image
-    elif btype == "image":
+    if btype == "image":
         image_data = block[btype]
         if image_data.get("type") == "external":
             url = image_data["external"].get("url", "")
@@ -178,8 +176,10 @@ def block_to_markdown(block: dict) -> str:
         # 確保 URL 去掉 AWS 簽名參數
         url = url.split("?")[0]
 
-        # 下載圖片並存到本地
-        image_filename = url.split("/")[-1]
+        # 基於文章標題生成圖片前綴
+        image_prefix = article_title.replace(" ", "_").lower()
+        image_filename = f"{image_prefix}_image.png"
+
         local_path = f"assets/images/{image_filename}"
         try:
             img_data = requests.get(url).content
@@ -189,10 +189,8 @@ def block_to_markdown(block: dict) -> str:
         except Exception as e:
             print(f"⚠️ 圖片下載失敗: {e}")
 
-        # 修改這部分，讓路徑包含 baseurl
-        baseurl = "/jimmyhua_notion.github.io"  # 需要與 _config.yml 中的 baseurl 一致
+        baseurl = "/jimmyhua_notion.github.io"  # 與 _config.yml 的 baseurl 一致
         return f"![image]({baseurl}/assets/images/{image_filename})\n\n"
-
     # 7. 分隔線 divider
     elif btype == "divider":
         return "---\n\n"
@@ -232,7 +230,7 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
         if btype == "child_page":
             child_pages.append(block)
         else:
-            page_markdown_parts.append(block_to_markdown(block))
+            page_markdown_parts.append(block_to_markdown(block, article_title=page_title))
 
     # 合成 Markdown 內容
     page_markdown = "".join(page_markdown_parts)

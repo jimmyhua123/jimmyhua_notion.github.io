@@ -175,13 +175,12 @@ def block_to_markdown(block: dict) -> str:
         else:
             url = image_data["file"].get("url", "")
 
-        # 確保 URL 沒有 AWS 簽名參數
+        # 確保 URL 去掉 AWS 簽名參數
         url = url.split("?")[0]
 
         # 下載圖片並存到本地
         image_filename = url.split("/")[-1]
         local_path = f"assets/images/{image_filename}"
-        
         try:
             img_data = requests.get(url).content
             with open(local_path, "wb") as img_file:
@@ -190,7 +189,9 @@ def block_to_markdown(block: dict) -> str:
         except Exception as e:
             print(f"⚠️ 圖片下載失敗: {e}")
 
-        return f"![image](/assets/images/{image_filename})\n\n"
+        # 修改這部分，讓路徑包含 baseurl
+        baseurl = "/jimmyhua_notion.github.io"  # 需要與 _config.yml 中的 baseurl 一致
+        return f"![image]({baseurl}/assets/images/{image_filename})\n\n"
 
     # 7. 分隔線 divider
     elif btype == "divider":

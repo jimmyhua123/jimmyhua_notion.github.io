@@ -128,13 +128,31 @@ def block_to_markdown(block: dict) -> str:
     # 3. 處理清單 bulleted_list_item / numbered_list_item
     elif btype == "bulleted_list_item":
         texts = block[btype].get("rich_text", [])
+        children = block.get("has_children", False)  # 是否有子內容
         list_text = rich_text_array_to_markdown(texts)
-        return f"- {list_text}\n"
+
+        if children:
+            sub_blocks = fetch_notion_blocks(block["id"])  # 獲取子區塊
+            sub_texts = [block_to_markdown(sub) for sub in sub_blocks]
+            sub_content = "\n  ".join(sub_texts)  # 縮排處理
+            return f"- {list_text}\n  {sub_content}\n"
+        else:
+            return f"- {list_text}\n"
+
 
     elif btype == "numbered_list_item":
         texts = block[btype].get("rich_text", [])
+        children = block.get("has_children", False)
         list_text = rich_text_array_to_markdown(texts)
-        return f"1. {list_text}\n"
+
+        if children:
+            sub_blocks = fetch_notion_blocks(block["id"])
+            sub_texts = [block_to_markdown(sub) for sub in sub_blocks]
+            sub_content = "\n  ".join(sub_texts)
+            return f"1. {list_text}\n  {sub_content}\n"
+        else:
+            return f"1. {list_text}\n"
+
 
     # 4. 數學方程式 equation
     elif btype == "equation":

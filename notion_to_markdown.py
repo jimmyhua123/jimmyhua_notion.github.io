@@ -229,6 +229,7 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
         parse_and_export_recursively(child_id, parent_slug=slug)
 
 
+
 def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     """
     只有當內容有變動時才更新文章，且保留原發佈日期
@@ -256,19 +257,30 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         old_front = ""
         old_body = old_full_content.strip()
 
+    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    
+    # 🔍 Debug：檢查是否成功讀取 `old_front`
+    print(f"🔍 舊 front matter:\n{old_front}")
+
+    # 確保 `date:` 存在，並強制替換錯誤格式的日期
+    if "date:" in old_front:
+        updated_front_matter = re.sub(r"(date:\s*)(\d{4}-\d{2}-\d{2}.*)", rf"\1{today_str} 10:00:00 +0800", old_front)
+    else:
+        updated_front_matter = old_front.strip() + f"\ndate: {today_str} 10:00:00 +0800"
+
+    # 🔍 Debug：檢查 `date:` 是否正確
+    print(f"✅ 更新後的 front matter:\n{updated_front_matter}")
+
+    new_old_front = f"---\n{updated_front_matter}\n---\n\n"
+    updated_full = new_old_front + new_markdown
+
     # 只有當內文變更時才更新 `date`
     if old_body != new_markdown.strip():
-        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-        updated_front_matter = re.sub(r"(date:\s*)(.*)", rf"\1{today_str} 10:00:00 +0800", old_front)
-        new_old_front = f"---\n{updated_front_matter}\n---\n\n"
-        updated_full = new_old_front + new_markdown
-
         with open(filename, "w", encoding="utf-8") as f:
             f.write(updated_full)
         print(f"[UPDATE] {filename} 內容變更，日期已更新")
     else:
         print(f"[NO CHANGE] {filename} 內容未變更，無需更新")
-
 
 # ----------------------------------------------------------------------
 # 7. Main：指定最上層頁面ID，開始遞迴

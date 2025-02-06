@@ -3,6 +3,7 @@ import json
 import requests
 import datetime
 import re
+import glob
 
 # ----------------------------------------------------------------------
 # 1. 讀取 Notion Token & Page ID 設定
@@ -156,81 +157,46 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
         parse_and_export_recursively(child_id, parent_slug=slug)
 
 
-
 def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     """
-    將 new_markdown 寫入 _posts/yyyy-mm-dd-{slug}.md。
-    若檔案已存在，且內文有變動，則更新 front matter 的 date 為今日。
+    只有當內容有變動時才更新文章，且保留原發佈日期
     """
     if not os.path.exists("_posts"):
         os.makedirs("_posts")
 
-    # 預設每篇文章檔名中的日期, 你可以用 old front matter date 也可
-    # 或一律用今天, 後面會再自動更新 date: 依變動判斷
-    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-    filename = f"_posts/{today_str}-{slug}.md"
-    
-    # 避免標題中的雙引號問題
-    safe_title = title.replace('"', '\\"')  # 確保雙引號被正確轉義
-
-    # 確保 categories 是正確的 YAML 列表格式
-    categories_str = ", ".join([f'"{c}"' for c in categories]) if categories else '"NotionExport"'
-
-    # 生成正確的 front matter 格式
-    new_front_matter = f"""---
-    layout: post
-    title: "{safe_title}"
-    date: {today_str} 10:00:00 +0800
-    categories: [{categories_str}]
-    ---
-    """
-
-
-    new_full_content = new_front_matter + "\n" + new_markdown
-
-    if not os.path.exists(filename):
-        # 檔案不存在 => 全新文章 => 直接寫檔
-        with open(filename, "w", encoding="utf-8") as f:
-            f.write(new_full_content)
-        print(f"[NEW] Created file: {filename}")
-    else:
-        # 檔案已存在 => 讀取舊檔, 分析是否有更新
+    # 查找是否已有該標題的文章
+    existing_files = glob.glob(f"_posts/*-{slug}.md")
+    if existing_files:
+        filename = existing_files[0]  # 使用第一個匹配的檔案
         with open(filename, "r", encoding="utf-8") as f:
             old_full_content = f.read()
+    else:
+        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        filename = f"_posts/{today_str}-{slug}.md"
+        old_full_content = ""
 
-        # 分離舊 front matter 與舊內文
-        # 例如用簡單正則: ^---(.*?)--- 來擷取 front matter
-        # 這裡是示範, 你可以用 ruamel.yaml 或 pyyaml 做更嚴謹的解析
-        match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
-        if match:
-            old_front = match.group(1)
-            old_body = match.group(2).strip()
-        else:
-            # 如果沒找到 front matter, 全部當作 body
-            old_front = ""
-            old_body = old_full_content.strip()
+    # 提取舊的 front matter 和內容
+    match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
+    if match:
+        old_front = match.group(1)
+        old_body = match.group(2).strip()
+    else:
+        old_front = ""
+        old_body = old_full_content.strip()
 
-        # 比對 new_markdown vs old_body
-        if old_body != new_markdown.strip():
-            # 有變動 => 更新 date
-            new_today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-            updated_front_matter = re.sub(
-                r"(date:\s*)(.*)",
-                rf"\1{new_today_str} 10:00:00 +0800",
-                old_front
-            )
-            # 如果你要保留原本 front matter 的其他欄位, 只改 date
-            # 這裡用正則簡易替換, 但需確保 date: 這行存在
+    # 只有當內文變更時才更新 `date`
+    if old_body != new_markdown.strip():
+        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        updated_front_matter = re.sub(r"(date:\s*)(.*)", rf"\1{today_str} 10:00:00 +0800", old_front)
+        new_old_front = f"---\n{updated_front_matter}\n---\n\n"
+        updated_full = new_old_front + new_markdown
 
-            # 產生新的全文
-            new_old_front = f"---\n{updated_front_matter}\n---\n\n"
-            updated_full = new_old_front + new_markdown
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(updated_full)
+        print(f"[UPDATE] {filename} 內容變更，日期已更新")
+    else:
+        print(f"[NO CHANGE] {filename} 內容未變更，無需更新")
 
-            with open(filename, "w", encoding="utf-8") as f:
-                f.write(updated_full)
-            print(f"[UPDATE] {filename} content changed, date updated to {new_today_str}")
-        else:
-            print(f"[NO CHANGE] {filename} remains the same.")
 
 # ----------------------------------------------------------------------
 # 7. Main：指定最上層頁面ID，開始遞迴

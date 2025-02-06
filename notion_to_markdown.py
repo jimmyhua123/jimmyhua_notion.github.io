@@ -9,8 +9,8 @@ import glob
 # 1. 讀取 Notion Token & Page ID 設定
 # ----------------------------------------------------------------------
 
-NOTION_TOKEN = "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"
-# NOTION_TOKEN = os.environ["NOTION_TOKEN"] 
+
+NOTION_TOKEN = os.environ["NOTION_TOKEN"] 
 ROOT_PAGE_ID = "166fbb857f9e80eba96ef0091d6ce244"  # 你的最上層 Notion Page ID
 
 HEADERS = {

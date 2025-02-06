@@ -1,14 +1,16 @@
 ---
 
+
 layout: post
 title: "Scalable-Softmax (SSMax) - 新型 Softmax 替代方案"
-date: 2025-02-05 10:00:00 +0800
+P25-02-06 10:00:00 +0800
 math: true
 categories: [ai-筆記]
 
+
 ---
 
-📌 文章來源：arXiv:2501.19399v1
+📌 文章來源：[arXiv:2501.19399v1](https://arxiv.org/abs/2501.19399v1)
 
 ✍ 摘要整理 by JimmyHua
 
@@ -17,6 +19,8 @@ categories: [ai-筆記]
 SSMax 的設計目標是 避免注意力衰退，並提高長度泛化能力。
 
 它與傳統 Softmax 類似，將輸入向量轉換為機率分佈，但關鍵差異在於其指數的基數取決於輸入向量的大小 (n)。
+
+---
 
 ## 🔹 Softmax vs. SSMax
 
@@ -31,6 +35,10 @@ $$
 $$
 z_i \mapsto \frac{n^{sz_i}}{\sum_{j=1}^n n^{sz_j}} = \frac{e^{(s\log n)z_i}}{\sum_{j=1}^n e^{(s\log n)z_j}}
 $$
+
+> 主要改進點
+
+---
 
 ## 🔹 SSMax 的優勢
 
@@ -48,6 +56,8 @@ $$
 ### ✅ 可無縫整合至 Transformer
 
 - 只需少量修改程式碼，即可將 SSMax 替換為 Softmax，適用於現有的 Transformer 架構。
+---
+
 ## 🔹 實驗結果分析
 
 ### 📊 1️⃣ 學習曲線分析
@@ -61,6 +71,8 @@ $$
 
 - 在極長的文本內，隱藏一段關鍵資訊，測試模型是否能正確檢索。
 - SSMax 模型 在 長達 10 倍序列長度的文本內，依然能精準找出關鍵資訊。
+---
+
 ## 🔹 SSMax 部署建議
 
 ### 🚀 1️⃣ 預訓練期間替換 Softmax
@@ -71,6 +83,8 @@ $$
 
 - SSMax 可以 直接取代 Softmax，且對 Transformer 模型幾乎無影響。
 - 只需調整 Softmax 計算方式，無需改動架構。
+---
+
 ## 🔹 結論
 
 ✅ SSMax 有效解決 Softmax 在長文本處理時的「注意力衰退」問題
@@ -81,9 +95,13 @@ $$
 
 ✅ SSMax 具備成為 Transformer 標準組件的潛力
 
+---
+
 ## 📌 參考連結
 
-🔗 論文原文: arXiv 2501.19399v1
+🔗 [論文原文: arXiv 2501.19399v1](https://arxiv.org/abs/2501.19399v1)
+
+---
 
 
 

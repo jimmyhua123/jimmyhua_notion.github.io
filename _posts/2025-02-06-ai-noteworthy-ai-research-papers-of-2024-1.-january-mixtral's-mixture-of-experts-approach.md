@@ -52,7 +52,7 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
   - BBQ 基準測試中展現較少偏差。
 
   - BOLD 基準測試中顯示更正向的情感傾向。
-  ![image](/jimmyhua_notion.github.io/assets/images/image.png)
+  ![image](/jimmyhua_notion.github.io/assets/images/untitled_image.png)
 
 
 

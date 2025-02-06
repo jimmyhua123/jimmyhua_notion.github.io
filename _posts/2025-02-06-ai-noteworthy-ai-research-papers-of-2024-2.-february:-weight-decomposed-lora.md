@@ -7,3 +7,5 @@ math: true
 ---
 
 [https://arxiv.org/abs/2402.09353](https://arxiv.org/abs/2402.09353)
+
+![image](/jimmyhua_notion.github.io/assets/images/2._february:_weight-decomposed_lora_image.png)

@@ -13,7 +13,7 @@
 
 ## 目錄結構
 
-
+```sh
 jimmyhua_notion.github.io/
 ├── _config.yml              # Jekyll 設定檔
 ├── _posts/                  # 存放 Notion 匯出的 Markdown 文章
@@ -42,7 +42,7 @@ jimmyhua_notion.github.io/
 ├── tags.md                  # 標籤歸檔
 ├── notion_to_markdown.py    # Notion 轉 Markdown 腳本
 └── README.md                # 本文件
-
+```
 
 ## 設定與使用
 

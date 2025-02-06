@@ -12,6 +12,9 @@ paginate: 5
 static_files:
   - assets/images
 
+include:
+  - assets/images
+
 # 啟用 Not Pure Poole 主題
 remote_theme: vszhub/not-pure-poole
 

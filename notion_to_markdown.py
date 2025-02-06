@@ -175,9 +175,13 @@ def block_to_markdown(block: dict) -> str:
         else:
             url = image_data["file"].get("url", "")
 
+        # 確保 URL 沒有 AWS 簽名參數
+        url = url.split("?")[0]
+
         # 下載圖片並存到本地
-        image_filename = url.split("/")[-1]  # 取 URL 最後的檔案名稱
+        image_filename = url.split("/")[-1]
         local_path = f"assets/images/{image_filename}"
+        
         try:
             img_data = requests.get(url).content
             with open(local_path, "wb") as img_file:

@@ -3,7 +3,7 @@ title: "Jimmy Hua's Notion Export"
 description: "Blog powered by Not Pure Poole"
 url: "https://jimmyhua123.github.io/jimmyhua_notion.github.io/"
 avatar: "/avatar.jpeg"            # 若你的頭像檔案實際在 /assets/images/avatar.jpeg，請改成 /assets/images/avatar.jpeg
-cover_image: "/bg.jpeg"           # 若有背景圖，路徑同上
+cover_image: "/bg.jpg"           # 若有背景圖，路徑同上
 permalink: pretty
 paginate: 5
 

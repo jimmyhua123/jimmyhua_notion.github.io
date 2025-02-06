@@ -1,6 +1,6 @@
 這是你的專案 README 文件：
 
-```markdown
+
 # Jimmy Hua's Notion Export
 
 這個專案使用 Jekyll 主題 **Not Pure Poole**，並透過 GitHub Actions 自動同步 Notion 筆記，轉換為 Markdown，並發布到 GitHub Pages。
@@ -13,7 +13,7 @@
 
 ## 目錄結構
 
-```
+
 jimmyhua_notion.github.io/
 ├── _config.yml              # Jekyll 設定檔
 ├── _posts/                  # 存放 Notion 匯出的 Markdown 文章
@@ -42,7 +42,7 @@ jimmyhua_notion.github.io/
 ├── tags.md                  # 標籤歸檔
 ├── notion_to_markdown.py    # Notion 轉 Markdown 腳本
 └── README.md                # 本文件
-```
+
 
 ## 設定與使用
 
@@ -99,7 +99,7 @@ git push
 
 - **日期、分類、標籤歸檔**: 透過 `dates.md`、`categories.md`、`tags.md` 管理文章
 - **深色模式**: 根據系統設定自動啟用
-- **SEO 優化**: 啟用 `jekyll-seo-tag`、`jekyll-sitemap`
+
 
 ## 授權
 
@@ -109,6 +109,6 @@ git push
 
 💡 **專案作者**: Jimmy Hua  
 📧 **Email**: [jimmy0624062461@gmail.com](mailto:jimmy0624062461@gmail.com)
-```
+
 
 這份 README 清楚說明了專案的功能、目錄結構、安裝步驟、同步 Notion 的方法，以及 GitHub Pages 部署方式。如果需要進一步修改或補充，請告訴我！🚀

@@ -1,37 +1,70 @@
-title: "Jimmy Hua's  Notion  Export"
+# 站點基本資訊
+title: "Jimmy Hua's Notion Export"
 description: "Blog powered by Not Pure Poole"
-# 使用 remote_theme 指定外部主題
+url: "https://jimmyhua123.github.io/jimmyhua_notion.github.io/"
+# avatar: "/avatar.jpeg"            # 若你的頭像檔案實際在 /assets/images/avatar.jpeg，請改成 /assets/images/avatar.jpeg
+cover_image: "/bg.jpg"           # 若有背景圖，路徑同上
+permalink: pretty
+paginate: 5
+
+# 啟用 Not Pure Poole 主題
 remote_theme: vszhub/not-pure-poole
 
-# 這裡必須啟用 jekyll-remote-theme plugin，才能載入第三方主題
+# Plugins (GitHub Pages 白名單可用的外掛)
 plugins:
   - jekyll-remote-theme
   - jekyll-paginate
-  
-future: true
-math: true
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
 
-# 如果你想使用文章分頁、RSS feed、SEO、Sitemap 等功能，也可一併加上（皆為 GitHub Pages 白名單可用）
-# plugins:
-#   - jekyll-remote-theme
-#   - jekyll-paginate
-#   - jekyll-feed
-#   - jekyll-seo-tag
-#   - jekyll-sitemap
+# SEO 與社群相關設定
+# twitter:
+#   username: "你的 Twitter 帳號"   # e.g. jimmyhua
+#   card: summary
+logo: "/logo.png"                # 如果有自己的 logo
+social:
+  name: "Jimmy Hua"
+  links:
+    # - "https://twitter.com/你的 Twitter 帳號"
+    - "https://github.com/jimmyhua123"
 
-# 其它可放主題的自訂參數，例如
+
+# 語系
+lang: "zh-TW"
+
+# Sass
+sass:
+  sass_dir: _sass
+  style: :compressed
+
+# 文章與數學式設定
+future: true     # 允許顯示未來日期的文章
+math: true       # 若要在文章中啟用 MathJax，可再於文章 front matter 裡指定 `math: true`
+
+# 分頁設定
 pagination:
   enabled: true
   per_page: 5
-
 paginate_path: "/page:num/"
 
-# 例如想開啟 TOC、MathJax 功能，可在各篇文章的 front matter 中設定
-#  layout: post
-#  toc: true
-#  math: true
-
+# 排除不需要處理的檔案或資料夾
 exclude:
   - config.json
   - notion_to_markdown.py
   - test_notion_api.py
+  - .editorconfig
+  - .git
+  - .jekyll-cache
+  - Gemfile
+  - Gemfile.lock
+  - LICENSE.md
+  - README.md
+  - scripts/
+  - not-pure-poole.gemspec
+
+# 文章作者資訊 (顯示於文章頁尾等處)
+author:
+  name: "Jimmy Hua"
+  url: "https://github.com/jimmyhua123"
+  email: "jimmy0624062461@gmail.com"

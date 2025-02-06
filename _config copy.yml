@@ -1,0 +1,38 @@
+title: "Jimmy Hua's  Notion  Export"
+description: "Blog powered by Not Pure Poole"
+# 使用 remote_theme 指定外部主題
+remote_theme: vszhub/not-pure-poole
+url: https://jimmyhua123.github.io/jimmyhua_notion.github.io/
+
+# 這裡必須啟用 jekyll-remote-theme plugin，才能載入第三方主題
+plugins:
+  - jekyll-remote-theme
+  - jekyll-paginate
+  
+future: true
+math: true
+
+# 如果你想使用文章分頁、RSS feed、SEO、Sitemap 等功能，也可一併加上（皆為 GitHub Pages 白名單可用）
+# plugins:
+#   - jekyll-remote-theme
+#   - jekyll-paginate
+#   - jekyll-feed
+#   - jekyll-seo-tag
+#   - jekyll-sitemap
+
+# 其它可放主題的自訂參數，例如
+pagination:
+  enabled: true
+  per_page: 5
+
+paginate_path: "/page:num/"
+
+# 例如想開啟 TOC、MathJax 功能，可在各篇文章的 front matter 中設定
+#  layout: post
+#  toc: true
+#  math: true
+
+exclude:
+  - config.json
+  - notion_to_markdown.py
+  - test_notion_api.py

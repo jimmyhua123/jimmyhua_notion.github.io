@@ -1,0 +1,9 @@
+---
+    layout: post
+    title: "7. July: The Llama 3 Herd of Models"
+    date: 2025-02-06 10:00:00 +0800
+    categories: ["NotionExport"]
+    ---
+    
+https://arxiv.org/abs/2407.21783
+

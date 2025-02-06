@@ -1,5 +1,5 @@
 import os
-import json
+
 import requests
 import datetime
 import re
@@ -8,8 +8,6 @@ import glob
 # ----------------------------------------------------------------------
 # 1. 讀取 Notion Token & Page ID 設定
 # ----------------------------------------------------------------------
-with open("config.json", "r", encoding="utf-8") as f:
-    config = json.load(f)
 
 NOTION_TOKEN = "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"
 # NOTION_TOKEN = os.environ["NOTION_TOKEN"] 
@@ -173,24 +171,13 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
         else:
             url = image_data["file"].get("url", "")
 
-        # 確保 URL 去掉 AWS 簽名參數
-        url = url.split("?")[0]
+        # 保留原始 URL，不下載圖片
+        print(f"跳過圖片下載，使用原始 URL: {url}")
 
-        # 基於文章標題生成圖片前綴
-        image_prefix = article_title.replace(" ", "_").lower()
-        image_filename = f"{image_prefix}_image.png"
+        # 返回 Markdown 格式的圖片引用
+        return f"![image]({url})\n\n"
 
-        local_path = f"assets/images/{image_filename}"
-        try:
-            img_data = requests.get(url).content
-            with open(local_path, "wb") as img_file:
-                img_file.write(img_data)
-            print(f"✅ 圖片下載成功: {local_path}")
-        except Exception as e:
-            print(f"⚠️ 圖片下載失敗: {e}")
-
-        baseurl = "/jimmyhua_notion.github.io"  # 與 _config.yml 的 baseurl 一致
-        return f"![image]({baseurl}/assets/images/{image_filename})\n\n"
+    
     # 7. 分隔線 divider
     elif btype == "divider":
         return "---\n\n"

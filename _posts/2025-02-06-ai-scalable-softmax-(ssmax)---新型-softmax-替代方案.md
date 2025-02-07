@@ -4,6 +4,7 @@ title: "Scalable-Softmax (SSMax) - 新型 Softmax 替代方案"
 date: 2025-02-06 10:00:00 +0800
 categories: ['NotionExport']
 math: true
+tags: 2025 paper
 ---
 
 📌 文章來源：[arXiv:2501.19399v1](https://arxiv.org/abs/2501.19399v1)

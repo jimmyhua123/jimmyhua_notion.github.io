@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "1. January Mixtral's Mixture of Experts Approach"
-date: 2025-02-06 10:00:00 +0800
+date: 2025-02-07 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---
@@ -52,10 +52,13 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
   - BBQ 基準測試中展現較少偏差。
 
   - BOLD 基準測試中顯示更正向的情感傾向。
-  ![image](https://prod-files-secure.s3.us-west-2.amazonaws.com/1c9ce5ad-ec87-4678-b178-dd3f83e53f2e/b403f33c-4469-47c8-a73e-0c74e89eb730/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466UJMXCDNQ%2F20250206%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250206T083659Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEEAaCXVzLXdlc3QtMiJHMEUCIQDv88AO91bSyKbj7u6URs88GT83PC6ze%2FjgVOR8lVJVDgIgCilwLg0LaztJDuoSvi9LNQjQ9LaCfswjnLloQDo5RXYq%2FwMIWRAAGgw2Mzc0MjMxODM4MDUiDLYizUzK2OoILKaVJyrcA%2BbvcudJgYMNdbCD6He0%2B0o239WV9U9tVXCsKNjciWHaRAYYGRktNjZMygOmd4GPEasDnKF6ZPqwgIWm7%2FqhQySlFTGuybWqo0FkLAuWVjtdVU07MApM7HE2ohmWspIoeulr6YoGYdZgLmmsyQzanQsO%2BgkPP6ElBZHIiXTilUlev8X3AA6e1CqjYwBh0wB37OhOSpsiEuIikndFl6TSs4UPA%2F1cB%2FztsMQu9comvv0TFATChtFjuX8pqwiAXnkWY6f3OZkQw%2BlGlFeTINF9mSKX1XxsmobvQM6aAgc5%2BrleToP1wwFrAdVdETWaATtWGNkvlxMAgIcws9bJfGO%2B6w0V%2BgFtwnBeHn5RwJR1JXDXXDZc36x7Cdh2x7xFVkIKeYTTMCbOKWLVV%2B4hQCdXRFdSmRKzWy8ulMarywJKc0xsgDxJJz8yYvXD2a6QmoWS3X%2BNPMMMd0OIY%2F%2B6Ng6JUqxzIFiqaaIq9hIjFxBEgYploXGIOGEwruZ%2BxSe3pIod36YhK8g27NSv2aCUgtdhw9Q3Nupb8IXTvbI5s1RPG8w%2F0oMnm3QZYjKCBs3p%2FpsCeSPmt4DybqZ%2Fsjl9OHz%2BM8hi7WL8MvdOpS6Fo%2BMiGWf14Jfa3WiZaotsnMmrMLvRkb0GOqUB7uVigqWvcGR6VjnB1N7laidPi3f2tj3Xvsm3f6HsXKLGkYf9vt7V9Op0UxSuantP1jz33wAhwVWDb8U9NSScDSs4m4bPQVZ5tDdqKoza%2FTd5a4hN7nToUbeLTM3rYYpyFGawUvP%2BOQOphWp%2Fs9zwrfZbVgTsF5FwQLwDneId9mtUMe2pk17euWoXeyC%2FZaItOxrKJ5%2B6P0%2BezaT1roQGhBgksAl0&X-Amz-Signature=c36cbd4fb86b70215499c3d976073e848c2631aff5472b56d3c520d0dce9f431&X-Amz-SignedHeaders=host&x-id=GetObject)
 
 
+- 🛠以下是架構
+  
 
+
+![image](https://prod-files-secure.s3.us-west-2.amazonaws.com/1c9ce5ad-ec87-4678-b178-dd3f83e53f2e/b403f33c-4469-47c8-a73e-0c74e89eb730/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466Z7U5PMJ3%2F20250207%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250207T020538Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFAaCXVzLXdlc3QtMiJHMEUCIDxUpRm8Xt7t6onQf8nEv0jYwQGUnGdZPDEjW03j6SgLAiEAgno9xUkUXbw8CNHwS5dy%2FYg4%2F0xENHDLy7kWmLT0ueYq%2FwMIaRAAGgw2Mzc0MjMxODM4MDUiDB5y61GFTAbGH%2Ft9dircA9eeXVrYlLMA9fmFcs8qR58y9op4WgrFNNlW38X0TG2oBbuRQrEVUbOgCU%2FKFTjoOLFnSOCzdqH%2FieAhWdckPG6EMBxJkOWLejx4uUe9sdhFqXS1yi1%2FgQa4As%2B1iasNqN5kwhgoBme%2FHxP1uAyQHdot4DpXFStzDMnbyw9vgTq%2FKx0SfrBApkV%2Bb3MhZkr7xti7V%2FDzCkMPVZpcUJ%2F%2FJOXq9FTzaZQGVjOGZH5oIkjgDCmHrDwaYp0vjF7f31dcnuwAlVWzLUQXk2mBhVGXmTf%2B%2BIUxRI1mC8tBAwHDZ4DqGfDnfgBZsj22qQRDwaAlai15L4yzZi%2B6JovfvaYSaB5FdHAniZrVvrGYmcBmyuhMz3MTwpI0JRwbnC6%2BuoPzCkv9UPLwzSPO4viEezApWCCq54Q2%2FTQuqqb%2FK1u4Ag9jP9nppxrhzAlthSDwfTa0vXrOAXZNJWquPeZgX10xcehTAadmUz0%2FoOVBieVdD1frPkMhMp0vPRfnCskDJRs%2B9hZpvmNBG2KsiM5HJIMD0ewIilzZ1%2BW%2FFiXn0x%2BiF6bOhSqKK%2BlhlnzElIQW1bjZ30gvE08Cn2UVOqrbB9mzXp9XAHpnQs%2F7BCZDgL9DiwuYQVsSRPyu7BQA%2FLtoMIyalb0GOqUBxKPbWpWsoWK0%2Bt%2FwuEEuSuV%2B64tsuK6tC603RRet6bkwQuDzTqbvBzOXiXXo2KjLpvwOx0cJO5PWH5pQUtJLY8nvaJtpyKEXvTXqXfZNjt8dUNmK%2FnLvunJfB5%2FouI2IjFGlM9zHSJsLLCD0kSeRRfNdaE6XZZ3UDiLE9P%2Bkfn2On8Jj1LWFqiaAkWbk6ebAEpfV8MUVG1lMUmfKPMP9ke8BoDnB&X-Amz-Signature=29d19ab93557ebc420e29bcff91c891c11c2e8ca85fcf1b1d82294dc9f39df2c&X-Amz-SignedHeaders=host&x-id=GetObject)
 
 ---
 
@@ -111,7 +114,5 @@ MoE 架構是 高度可擴展的神經網路，特別適用於 大型語言模�
 ✅ MoE 架構更靈活，允許不同專家數量與門控機制，應用範圍更廣。
 
 ✅ Mixtral MoE 是經過優化的 SMoE 架構，特別適用於 LLM 訓練與推理，而 傳統 MoE 適用於更多 AI 領域。
-
-Mixtral 透過稀疏激活 + 高效路由機制，在計算資源有限的情況下，提供與 Llama 2 70B、GPT-3.5 相當的效能，為 MoE 架構帶來 新突破！ 🚀
 
 ---

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "10. October: Replicating OpenAI o1's reasoning capabilities"
-date: 2025-02-06 10:00:00 +0800
+date: 2025-02-07 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---

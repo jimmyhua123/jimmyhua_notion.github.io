@@ -9,11 +9,10 @@ cover_image: "/bg.jpg"           # 若有背景圖，路徑同上
 permalink: pretty
 paginate: 5
 
-static_files:
-  - assets/images
-
-include:
-  - assets/images
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
 
 # 啟用 Not Pure Poole 主題
 remote_theme: vszhub/not-pure-poole

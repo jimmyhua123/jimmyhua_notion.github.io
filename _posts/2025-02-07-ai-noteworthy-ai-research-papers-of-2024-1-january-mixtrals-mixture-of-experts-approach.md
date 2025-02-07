@@ -1,18 +1,10 @@
 ---
 layout: post
-title: "Noteworthy AI Research Papers of 2024"
+title: "1. January Mixtral's Mixture of Experts Approach"
 date: 2025-02-07 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---
-
-📌 原文連結：[https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-11](https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-1)
-
-📌 原文連結: [https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-22](https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-2)
-
-
-
-
 
 # Mixtral 8x7B（SMoE）與 MoE 架構比較
 
@@ -95,7 +87,7 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
 
 
 
-![image](https://prod-files-secure.s3.us-west-2.amazonaws.com/1c9ce5ad-ec87-4678-b178-dd3f83e53f2e/b403f33c-4469-47c8-a73e-0c74e89eb730/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466R62GYLKY%2F20250207%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250207T031805Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFAaCXVzLXdlc3QtMiJHMEUCIGGhEi3TTdEQlhZJiimGK4HyxkXbw5SuSXeM6UtGFbLlAiEAnY2xp3VJLLC3ciwSbb5C8ktylF9eOAJ%2ForxHX3V%2BbFwq%2FwMIaRAAGgw2Mzc0MjMxODM4MDUiDKBTANbdD3MeBkmfKSrcA5V6qHJbR4oe2j3V2BkXgE2qMt4uA4HDIeI7ZRV9q35AlmeyrI6IGlQbElWaoTSNDP3JoqYCSfPXHEFN5P%2BOBhvjMnRiK%2BHmJWIEq7pmlfLrqh0zSL1EKvn3x3r57xhvmTr4UKl4F8P7Unt4csRv84vyYmHcyfkOsFbSYRT7ajbXc6SY4Pbpq5TviFYymM6nYd4kY9Kl2PbpdS4GjIFs3Gq%2B0RGNC%2Fwqnt9ISaeu%2BiKgzVIO242YcDB9Rj5%2FOqQZdbwY7O4eXdwv41kVj36CTcQ3s6AHsrrgpue3ZDC3ev3muw8403Bz3Hk7mh3cs6j%2FEnhtqunkxAVKEbCenIUfXkFgjqkIhtcF7NQ7JjZUT4qp%2FakVEbZIvLmt%2FYvNZgQ3LIbfzVV3sgmBGGWcwohnZFgROioSmu7w9m%2FEZmnjT7ShXxgOQW5PhmQSpLffVCSYzailVmeQUYNlnFjQoH0E810tSoMcg2RrN6ynYJny66wHBIT50H2YWEB30Q9%2F7AOfKtP0r86I94kafXqoSiREImI4MRrmvLrgWQqjHNwiAlEAACQ4GTPxkd1umrMgr8y9YgtTCB90ptqifo8Xk7L4lx4QSRJrjtN%2FC7zlanLbh6sYlvu7HIxIQbG5%2B%2FJPMJWalb0GOqUBXTEfkq3bpHDVjO%2Bx%2FpsHf7ibIfEA1AQ8%2Bux3JwGZfmqnur2K5QyPmJza7jmgfJxPN%2Bkm5YKK0H3TgYyWwd8o4GGsperkcm45l8Ii4YGUa8CN6bWDRRcb21qZhsjEWbvMrujweiaYJsgrh8VNOOSfIx2OKS5QtVcHeDSzCpZE9zZmFheZ943D7x2uP06s4Q7ioc5zmemPyX3Ds2i0dImiJnhk5wgC&X-Amz-Signature=676612d493839a04329ee75b1b6cb661ec58083c32017e2e5648ef5bdb340a0c&X-Amz-SignedHeaders=host&x-id=GetObject)
+![image](https://prod-files-secure.s3.us-west-2.amazonaws.com/1c9ce5ad-ec87-4678-b178-dd3f83e53f2e/b403f33c-4469-47c8-a73e-0c74e89eb730/image.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ASIAZI2LB466WWLRZCPX%2F20250207%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250207T032435Z&X-Amz-Expires=3600&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEFAaCXVzLXdlc3QtMiJIMEYCIQCTXYvJ9lQwwJyFOchLIaG5mhcWpUnDpS4PuUuoFVqSCwIhAOAWYdlhr9qAgtPf%2FhnsfbN1WJWS9JAdNTR86P4f4zy7Kv8DCGkQABoMNjM3NDIzMTgzODA1IgxU2rygTTzjtK4HNNcq3APhTYxXi3Nh9%2FLkZLpE362av98NMMX9VDDqEqW4uy%2B3cF1mmaUYuWDcjbNZHgnQWxVkILnuQmOf%2FUVV%2FqtrwDDzieGsRgezKZSCVNlEyAF60%2B7UV%2B3LUxSSVwn2vhOqcuwX%2BRhEuDc4fLmI0jVr63Uh%2B4mtX9hk8II0j3yW4vQU95iyd51FjpM73ePD%2B6%2F2zBDRyabQc7ZyeF3ml59Ak84ypFQtsr5tcbpxN%2BvK6l3qmFlrfOM5YHMDMGc8RlHysIrnTXryf0Fne3PvOZsOj8MKKrWjYYOVqFy3M3nEy%2BFy3flsISt5mcOciRr0dfJl7LkkfDx6dDwm3ke5gDterS3%2FHtvV8bDz66fow%2Byk%2FHhRI8ZLCBUxxdfvuOLyeK7aGaCtZHie3EF7XQU%2FzpbLYEo4k%2BoVDVN3yla4wcS2Ys2WNy%2FDnSwy%2BB8oAyvjvtuqXow8143LISjK%2FcZZ%2BOlmKGqkbeTsemrr5ub7ugukAb6bh0jhQCak%2F6YLaB4heABKiXjWCIWcb03woBDdakr6zkLLDa1HmGHbz%2FRzw0vZxSx16tzM%2BveihXpInas2g2vppBtDOwI4lG6%2Fo3foiyULr6t4lBh4rqEcHjFRQhxTrQAyaEuufh8x7RUlspORDDDkmZW9BjqkAddL8j3HpHKZhPg7iQ9mDQEkC4NKYW7WHxCCvhUAapi5tb27lycAWK0%2B9CvONslMO%2FTl1U9LUAY6iZFmsMtrCBco4UwHAYVdnMRQOEeVn5bq9CwyHPmoNirSknmPWSYqKZklhqg8a5RiB41pbYPllgIeJVHEpTa7Kq9156NOK9o1Aov778U7vYo%2FGKGVYPqRgH1F0GHXxW2kPAj9Y5P4dLPU32%2Fa&X-Amz-Signature=ae40f44c99ba2e131ab27ba0988325f6ffcdebd127f14d2e3e0ac0637577d01d&X-Amz-SignedHeaders=host&x-id=GetObject)
 
 ---
 
@@ -174,31 +166,3 @@ MoE 架構是 高度可擴展的神經網路，特別適用於 大型語言模�
 ✅ Mixtral MoE 是經過優化的 SMoE 架構，特別適用於 LLM 訓練與推理，而 傳統 MoE 適用於更多 AI 領域。
 
 ---
-
-
-
-[https://arxiv.org/abs/2402.09353](https://arxiv.org/abs/2402.09353)
-
-
-
-[https://arxiv.org/abs/2403.08763](https://arxiv.org/abs/2403.08763)
-
-[https://arxiv.org/abs/2404.10719](https://arxiv.org/abs/2404.10719)
-
-[https://arxiv.org/abs/2405.09673](https://arxiv.org/abs/2405.09673)
-
-
-
-[https://arxiv.org/abs/2406.17557](https://arxiv.org/abs/2406.17557)
-
-[https://arxiv.org/abs/2407.21783](https://arxiv.org/abs/2407.21783)
-
-[https://arxiv.org/abs/2408.03314](https://arxiv.org/abs/2408.03314)
-
-[https://arxiv.org/abs/2409.11402](https://arxiv.org/abs/2409.11402)
-
-[https://arxiv.org/abs/2410.18982](https://arxiv.org/abs/2410.18982)
-
-[https://arxiv.org/abs/2411.04330](https://arxiv.org/abs/2411.04330)
-
-[https://arxiv.org/abs/2412.08905](https://arxiv.org/abs/2412.08905)

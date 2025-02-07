@@ -1,16 +1,15 @@
 import os
-
 import requests
 import datetime
 import re
 import glob
-
+import unicodedata
 # ----------------------------------------------------------------------
 # 1. 讀取 Notion Token & Page ID 設定
 # ----------------------------------------------------------------------
 
-
-NOTION_TOKEN = os.environ["NOTION_TOKEN"] 
+NOTION_TOKEN = "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"
+# NOTION_TOKEN = os.environ["NOTION_TOKEN"] 
 ROOT_PAGE_ID = "166fbb857f9e80eba96ef0091d6ce244"  # 你的最上層 Notion Page ID
 
 HEADERS = {
@@ -18,13 +17,24 @@ HEADERS = {
     "Notion-Version": "2022-06-28"
 }
 
+
+def slugify(text):
+    """
+    轉換標題為檔案名稱友善格式：
+    - 移除特殊符號
+    - 轉換為小寫
+    - 空格變成 "-"
+    """
+    text = unicodedata.normalize('NFKD', text)
+    text = re.sub(r'[^\w\s-]', '', text).strip().lower()
+    return re.sub(r'[-\s]+', '-', text)
+
 # ----------------------------------------------------------------------
 # 2. 取得頁面標題 (選擇用 retrieve_page，或直接從 child_page["title"] 取)
 # ----------------------------------------------------------------------
 def retrieve_page_title(page_id: str) -> str:
     """
-    嘗試從 Notion `retrieve_page` API 取得該頁面真正標題。
-    若結構複雜，請依實際情況修改。
+    獲取 Notion 頁面標題，並產生 `slug`
     """
     url = f"https://api.notion.com/v1/pages/{page_id}"
     try:
@@ -32,11 +42,11 @@ def retrieve_page_title(page_id: str) -> str:
         data = res.json()
         title_obj = data["properties"]["title"]["title"]
         if title_obj:
-            return title_obj[0]["plain_text"]
+            page_title = title_obj[0]["plain_text"]
+            return page_title, slugify(page_title)  # ⚡️ 回傳 slug
     except (KeyError, IndexError, requests.exceptions.RequestException) as e:
         print(f"⚠️ 無法獲取頁面標題：{e}")
-    return "Untitled"
-
+    return "Untitled", "untitled"
 
 # ----------------------------------------------------------------------
 # 3. 取得某頁面下的所有區塊 (含分頁處理)
@@ -53,8 +63,14 @@ def fetch_notion_blocks(page_id: str) -> list:
     while True:
         resp = requests.get(url, headers=HEADERS, params=params)
         data = resp.json()
-        results = data.get("results", [])
-        all_blocks.extend(results)
+        # save_notion_response(page_id, data)
+        for block in data.get("results", []):
+            all_blocks.append(block)
+
+            # **如果這個 block 是 Table，且 has_children=True，需要進一步抓取內容**
+            if block.get("has_children", False):
+                child_blocks = fetch_notion_blocks(block["id"])
+                all_blocks.extend(child_blocks)
 
         if data.get("has_more"):
             params["start_cursor"] = data["next_cursor"]
@@ -62,7 +78,6 @@ def fetch_notion_blocks(page_id: str) -> list:
             break
 
     return all_blocks
-
 
 # ----------------------------------------------------------------------
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）
@@ -189,6 +204,32 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
         # 可以用 Markdown 的引用符號 '>' 來表示
         return f"> {quote_text}\n\n"
 
+    elif btype == "table":
+        table_info = block.get("table", {})
+        table_width = table_info.get("table_width", 3)  # 取得表格欄位數量
+
+        # 確保有 `children` 來存放表格行
+        if block.get("has_children", False):
+            table_rows = fetch_notion_blocks(block["id"])  # 取得子區塊
+        else:
+            return ""
+
+        # 儲存 Markdown 表格
+        md_table = []
+        for row in table_rows:
+            if row["type"] == "table_row":
+                cells = row["table_row"].get("cells", [])
+                md_row = " | ".join(rich_text_array_to_markdown(cell) for cell in cells)
+                md_table.append(f"| {md_row} |")
+
+        # 加上表頭與分隔線
+        if md_table:
+            headers = md_table[0]  # 第一行作為標題
+            separator = "| " + " | ".join(["---"] * table_width) + " |"
+            md_table.insert(1, separator)
+
+        return "\n".join(md_table) + "\n\n"
+
     # 若遇到 child_page / child_database，就不在這裡轉 Markdown，
     # 而是交給外層做遞迴，以產生新的文章或檔案
     elif btype == "child_page" or btype == "child_database":
@@ -203,9 +244,22 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
 # ----------------------------------------------------------------------
 # 5. 遞迴函式：parse_and_export_recursively()
 # ----------------------------------------------------------------------
+processed_pages = set()  # 全域集合，用來記錄已處理的 page_id
+
 def parse_and_export_recursively(page_id: str, parent_slug: str = None):
-    # 取得頁面標題
-    page_title = retrieve_page_title(page_id)
+    global processed_pages
+
+    if page_id in processed_pages:
+        print(f"⚠️ 頁面 {page_id} 已處理，跳過重複操作")
+        return
+
+    processed_pages.add(page_id)
+
+    # 取得標題與 slug
+    page_title, slug = retrieve_page_title(page_id)
+
+    if parent_slug:
+        slug = f"{parent_slug}-{slug}"
 
     # 取得頁面內容 Blocks
     blocks = fetch_notion_blocks(page_id)
@@ -222,26 +276,17 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
     # 合成 Markdown 內容
     page_markdown = "".join(page_markdown_parts)
 
-    # 確定 slug
-    slug = page_title.replace(" ", "-").lower()
-    if parent_slug:
-        slug = f"{parent_slug}-{slug}"
-
-    # 使用 upsert_post_with_date_update() 更新檔案
-    upsert_post_with_date_update(slug, page_title, page_markdown, categories=["NotionExport"])
+    # 如果有子頁面，避免生成不必要的父級文章
+    if not child_pages:
+        upsert_post_with_date_update(slug, page_title, page_markdown, categories=["NotionExport"])
 
     # 處理子頁面
     for child_block in child_pages:
         child_id = child_block["id"]
-        child_title = child_block["child_page"]["title"]
         parse_and_export_recursively(child_id, parent_slug=slug)
 
 
-
 def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
-    """
-    只有當內容有變動時才更新文章，並確保 front matter（YAML 區塊）完整
-    """
     if not os.path.exists("_posts"):
         os.makedirs("_posts")
 
@@ -256,6 +301,12 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         filename = f"_posts/{today_str}-{slug}.md"
         old_full_content = ""
 
+    # 刪除重複檔案
+    for file in existing_files:
+        if file != filename:
+            os.remove(file)
+            print(f"⚠️ 刪除重複檔案：{file}")
+
     # 提取舊的 front matter 和內容
     match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
     if match:
@@ -265,9 +316,8 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         old_front = ""
         old_body = old_full_content.strip()
 
+    # 更新 `date:` 並確保 front matter 完整
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
-
-    # **確保 front matter 欄位完整**
     front_matter_dict = {
         "layout": "post",
         "title": f'"{title}"',
@@ -275,8 +325,6 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         "categories": categories if categories else ["NotionExport"],
         "math": "true"
     }
-
-    # 如果舊的 front matter 存在，解析它
     if old_front:
         for line in old_front.split("\n"):
             key, *value = line.split(":", 1)
@@ -284,16 +332,10 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
             if value:
                 front_matter_dict[key] = value[0].strip()
 
-    # **更新 `date:`**
-    front_matter_dict["date"] = f"{today_str} 10:00:00 +0800"
-
-    # **轉換回 YAML 格式**
+    # 更新完整內容
     updated_front_matter = "---\n" + "\n".join(f"{key}: {value}" for key, value in front_matter_dict.items()) + "\n---\n"
-
-    # **完整 Markdown 內容**
     updated_full = updated_front_matter + "\n" + new_markdown.strip() + "\n"
 
-    # **只有當內文變更時才更新 `date`**
     if old_body != new_markdown.strip():
         with open(filename, "w", encoding="utf-8") as f:
             f.write(updated_full)

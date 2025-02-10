@@ -118,7 +118,7 @@ def download_image(image_url: str, block_id: str) -> str:
 
     # 回傳圖片在網站中的相對路徑
     # 此處採用絕對路徑 '/images/filename'，若需要相對路徑請自行調整
-    return f"/images/{local_filename}"
+    return f"images/{local_filename}"
 
 # ----------------------------------------------------------------------
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）
@@ -330,12 +330,15 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         old_front = ""
         old_body = old_full_content.strip()
 
-    # 更新 front matter（保留原有資料並更新日期）
+    # 設定最新日期
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    new_date = f"{today_str} 10:00:00 +0800"
+
+    # 更新 front matter（保留其他欄位，但不覆蓋 date）
     front_matter_dict = {
         "layout": "post",
         "title": f'"{title}"',
-        "date": f"{today_str} 10:00:00 +0800",
+        "date": new_date,
         "categories": categories if categories else ["NotionExport"],
         "math": "true"
     }
@@ -343,8 +346,12 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         for line in old_front.split("\n"):
             key, *value = line.split(":", 1)
             key = key.strip()
-            if value:
+            # 若 key 為 date 則跳過，避免覆蓋新日期
+            if key != "date" and value:
                 front_matter_dict[key] = value[0].strip()
+
+    # 最後再重新設定一次 date，確保為最新日期
+    front_matter_dict["date"] = new_date
 
     updated_front_matter = "---\n" + "\n".join(f"{key}: {value}" for key, value in front_matter_dict.items()) + "\n---\n"
     updated_full = updated_front_matter + "\n" + new_markdown.strip() + "\n"

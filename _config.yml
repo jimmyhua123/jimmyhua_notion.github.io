@@ -9,19 +9,13 @@ cover_image: "/bg.jpg"           # 若有背景圖，路徑同上
 permalink: pretty
 paginate: 5
 
-# 使用 kramdown 作為 Markdown 解析器
 markdown: kramdown
-
-# kramdown 設定
 kramdown:
-  input: GFMKatex       # 告知 kramdown 使用自訂的 GFMKatex 解析器
-  hard_wrap: false
-  auto_ids: true
-  math_engine: mathjax   # 保留 MathJax 做渲染
+  input: GFM
+  math_engine: mathjax
   math_engine_opts:
-    # 設定數學公式的分隔符（依你希望的方式調整）
-    inline_math_delimiters: ['\\(', '\\)']
-    display_math_delimiters: ['$$', '$$']
+    inline_math_delimiters: [['$', '$'], ['\\(', '\\)']]
+    display_math_delimiters: [['$$', '$$'], ['\\[', '\\]']]
 
 
 # 啟用 Not Pure Poole 主題

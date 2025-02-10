@@ -11,7 +11,7 @@ paginate: 5
 
 markdown: kramdown
 kramdown:
-  input: GFM
+  input: GFMKatex
   math_engine: mathjax
   math_engine_opts:
     inline_math_delimiters: ["\\(", "\\)"]

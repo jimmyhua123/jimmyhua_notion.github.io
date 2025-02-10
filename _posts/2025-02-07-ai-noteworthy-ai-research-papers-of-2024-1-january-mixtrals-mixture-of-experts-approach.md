@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "1. January Mixtral's Mixture of Experts Approach"
-date: 2025-02-07 10:00:00 +0800
+date: 2025-02-10 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---
@@ -87,7 +87,7 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
 
 
 
-![image](/images/192fbb85-7f9e-8029-8e3e-f7eb3b482ac6.png)
+![image](images/192fbb85-7f9e-8029-8e3e-f7eb3b482ac6.png)
 
 ---
 

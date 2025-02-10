@@ -144,7 +144,6 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
             md_text_parts.append(text_content)
     return "".join(md_text_parts)
 
-
 def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
     """
     將單一 Notion block 轉為 Markdown 的字串。

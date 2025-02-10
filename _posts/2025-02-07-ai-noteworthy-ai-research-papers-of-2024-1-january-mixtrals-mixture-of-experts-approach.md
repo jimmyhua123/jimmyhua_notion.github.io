@@ -87,7 +87,7 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
 
 
 
-![image](images/192fbb85-7f9e-8029-8e3e-f7eb3b482ac6.png)
+![image]({{ site.baseurl }}/images/192fbb85-7f9e-8029-8e3e-f7eb3b482ac6.png)
 
 ---
 

@@ -25,6 +25,9 @@ plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
 
+include:
+  - images
+
 # SEO 與社群相關設定
 # twitter:
 #   username: "你的 Twitter 帳號"   # e.g. jimmyhua

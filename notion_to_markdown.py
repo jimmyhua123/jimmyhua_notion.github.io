@@ -118,7 +118,7 @@ def download_image(image_url: str, block_id: str) -> str:
 
     # 回傳圖片在網站中的相對路徑
     # 此處採用絕對路徑 '/images/filename'，若需要相對路徑請自行調整
-    return f"images/{local_filename}"
+    return f"{{{{ site.baseurl }}}}/images/{local_filename}"
 
 # ----------------------------------------------------------------------
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）

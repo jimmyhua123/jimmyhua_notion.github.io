@@ -26,9 +26,8 @@ $$
 \Delta\mathbf{W}\approx\mathbf{BA}
 $$
 
-- $$\mathbf{B} \in \mathbb{R}^{d \times r}$$
-- $$\mathbf{A} \in \mathbb{R}^{r \times k}$$
-- $$r \ll \min(d,k)$$（秩 $$r$$ 遠小於原始矩陣維度）
+- $$\mathbf{B} \in \mathbb{R}^{d \times r}$$  $$\mathbf{A} \in \mathbb{R}^{r \times k}$$
+- $$r \ll \min(d,k)$$  （秩 $$r$$ 遠小於原始矩陣維度）
 1. 在 LoRA 設定下，僅需訓練這兩個小矩陣 $$\mathbf{A}, \mathbf{B}$$，即可在新任務上微調模型，顯著減少參數更新量。
 
 

@@ -11,48 +11,31 @@ math: true
 1. DoRA: [DoRA: Weight-Decomposed Low-Rank Adaptation](https://arxiv.org/abs/2402.09353)
 1. LoRA: [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)
 1. LoRA Survey: [A Survey on LoRA of Large Language Models](https://arxiv.org/abs/2106.09685)
----
 
-# 1️⃣ 什麼是 LoRA？
 
-在介紹 DoRA 之前，先簡要回顧 LoRA（Low-Rank Adaptation） 的基礎概念。
-
-## 1.1 背景與核心假設
-
-- 低「內在維度」（Intrinsic Dimension）
-  - Aghajanyan 等人指出，預訓練的語言模型內在維度極低，即便將模型參數投影到更小的空間，也能有效學習，顯示出模型參數的冗餘性。
-
-- Aghajanyan 等人指出，預訓練的語言模型內在維度極低，即便將模型參數投影到更小的空間，也能有效學習，顯示出模型參數的冗餘性。
-- LoRA 的核心假設
-  - 微調時，權重的更新可以用低秩矩陣（Low-Rank Matrix）來近似，從而減少參數更新量，提高計算效率。
-
-- 微調時，權重的更新可以用低秩矩陣（Low-Rank Matrix）來近似，從而減少參數更新量，提高計算效率。
-## 1.2 數學解釋 🔢
+1.2 數學解釋 🔢
 
 1. 假設預訓練權重矩陣為 $W_0$，微調時，權重變為：
-  \mathbf{W} = \mathbf{W}_0 + \Delta \mathbf{W}
-
-
+$$
 \mathbf{W} = \mathbf{W}_0 + \Delta \mathbf{W}
+$$
 
 1. LoRA 假設 權重更新 $\Delta W$ 可用兩個低秩矩陣的乘積來近似：
-其中:
+其中：
 $$
 \Delta\mathbf{W}\approx\mathbf{BA}
 $$
 
-- **$\mathbf{B} \in \mathbb{R}^{d \times r}$**
-- **$\mathbf{A} \in \mathbb{R}^{r \times k}$**
-- **$r \ll \min(d,k)$**（秩 $r$ 遠小於原始矩陣維度）
+- $\mathbf{B} \in \mathbb{R}^{d \times r}$
+- $\mathbf{A} \in \mathbb{R}^{r \times k}$
+- $r \ll \min(d,k)$（秩 $r$ 遠小於原始矩陣維度）
   ![image]({{ site.baseurl }}/images/196fbb85-7f9e-8050-9627-c85ad4b2fbdb.png)
 
 
 ![image]({{ site.baseurl }}/images/196fbb85-7f9e-8050-9627-c85ad4b2fbdb.png)
 
-1. 在 LoRA 設定下，僅需訓練這兩個小矩陣 \mathbf{A}, \mathbf{B}，即可在新任務上微調模型，顯著減少參數更新量。
+1. 在 LoRA 設定下，僅需訓練這兩個小矩陣 $\mathbf{A}, \mathbf{B}$，即可在新任務上微調模型，顯著減少參數更新量。
 > 小結：LoRA 只調整小規模的低秩矩陣，保留了原始模型的能力，同時讓微調變得更輕量。
-
----
 
 ## 1.3 LoRA 的效率與影響 🚀
 
@@ -72,8 +55,6 @@ $$
 
 - 更高訓練吞吐量：因為更新參數少，微調速度更快。
 - 不增加推理延遲：LoRA 更新矩陣形狀與原模型一致，推理時無需額外計算。
----
-
 ## 1.4 LoRA 的優勢總結 ✅
 
 | 優勢 | 描述 |
@@ -83,8 +64,6 @@ $$
 | 零額外推理延遲 | 微調後的推理開銷與原模型相同。 |
 | 可插拔性 | 可以輕鬆切換 LoRA 模組，支持多任務。 |
 | 易於實作 | 目前已有許多開源庫支援，開發門檻低。 |
-
----
 
 # 2️⃣ DoRA：Weight-Decomposed LoRA
 
@@ -101,64 +80,60 @@ $$
 - 方向 V：權重向量的指向。
 > 與 LoRA 的差異：
 
-- LoRA 直接對 \Delta\mathbf{W} 進行低秩近似。
-- DoRA 先將權重  W 分解為 (m, \mathbf{V})，再針對「方向」V 進行低秩更新，同時允許「量值」m 調整。
----
-
+- LoRA 直接對 $\Delta\mathbf{W}$ 進行低秩近似。
+- DoRA 先將權重 $\mathbf{W}$ 分解為 $(m, \mathbf{V})$，再針對「方向」V 進行低秩更新，同時允許「量值」m 調整。
 ## 2.2 DoRA 的運作機制 ⚙️
 
 1. 權重分解（Decompose）
-  \mathbf{W} = \mathbf{m} \times \mathbf{V}
-
-
-  - m：代表「量值」
-
-  - V：代表「方向」
-
+  $$
 \mathbf{W} = \mathbf{m} \times \mathbf{V}
+$$
 
-- m：代表「量值」
-- V：代表「方向」
+
+  - $m$：代表「量值」
+
+  - $V$：代表「方向」
+
+$$
+\mathbf{W} = \mathbf{m} \times \mathbf{V}
+$$
+
+- $m$：代表「量值」
+- $V$：代表「方向」
 1. 方向更新（Direction Update）
   - 只對 方向矩陣 V 進行 LoRA 風格的低秩更新：
-  \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
 
-
-
-  \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
+  $$
+\Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
+$$
 
 
 - 只對 方向矩陣 V 進行 LoRA 風格的低秩更新：
-  \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
-
-
+$$
 \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
+$$
 
 1. 量值更新（Magnitude Update）
-  - 量值向量 m 也可更新，但不像方向那樣使用低秩矩陣，而是獨立調整。
+  - 量值向量 $m$ 也可更新，但不像方向那樣使用低秩矩陣，而是獨立調整。
 
-- 量值向量 m 也可更新，但不像方向那樣使用低秩矩陣，而是獨立調整。
+- 量值向量 $m$ 也可更新，但不像方向那樣使用低秩矩陣，而是獨立調整。
 1. 權重合併（Merge）（推理時）
-  - 部署時，將更新後的 m 和 V 合併回原始權重：
-  \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
+  - 部署時，將更新後的 $m$ 和 $V$ 合併回原始權重：
 
-
-
-  \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
+  $$
+\mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
+$$
 
 
   - 不額外增加推理計算成本。
 
-- 部署時，將更新後的 m 和 V 合併回原始權重：
-  \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
-
-
+- 部署時，將更新後的 $m$ 和 $V$ 合併回原始權重：
+$$
 \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
+$$
 
 - 不額外增加推理計算成本。
----
-
 # 3️⃣ 小結
 
-- LoRA：針對權重更新 \Delta\mathbf{W} 進行低秩近似，實現高效微調。
+- LoRA：針對權重更新 $\Delta\mathbf{W}$ 進行低秩近似，實現高效微調。
 - DoRA：進一步拆解權重為 (magnitude, direction)，並 只對方向進行低秩更新，帶來更好的效能與靈活性。

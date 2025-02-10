@@ -122,27 +122,21 @@ def download_image(image_url: str, block_id: str) -> str:
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）
 # ----------------------------------------------------------------------
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
-    """
-    處理 Notion API 回傳的 rich_text 陣列，將超連結轉為 Markdown 格式，
-    同時處理內嵌數學公式（type 為 "equation"），使用雙美元符號包覆
-    """
     md_text_parts = []
     for rt in rich_text_array:
-        # 若此 token 為數學公式，取出 expression 並用 $$ 包覆
-        if rt.get("type") == "equation":
-            eq_expr = rt.get("equation", {}).get("expression", "")
-            md_text_parts.append(f"$${eq_expr}$$")
-            continue
-
+        # 取得原始文本
         text_content = rt.get("plain_text", "")
+        # 若文本中出現 $...$（單一美元符號包覆），將其轉換為 \(...\)
+        # 注意：這個替換會把所有 $...$ 內容都當作數學公式處理，
+        # 若你文件中有正常的 $ 符號，請酌情調整正則表達式以避免誤替換
+        text_content = re.sub(r'\$(.+?)\$', r'\\(\1\\)', text_content)
+        
         link_url = None
-
-        # 判斷是否有超連結
-        if rt.get("href"):
+        if rt.get("href"):  # 第一種可能
             link_url = rt.get("href")
         elif rt.get("text") and rt["text"].get("link"):
             link_url = rt["text"]["link"].get("url")
-
+        
         if link_url:
             md_text_parts.append(f"[{text_content}]({link_url})")
         else:

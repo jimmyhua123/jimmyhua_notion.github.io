@@ -11,12 +11,13 @@ paginate: 5
 
 markdown: kramdown
 kramdown:
-  input: GFM
+  # input: GFM
   math_engine: mathjax
   math_engine_opts:
-    inline_math_delimiters: [['$', '$'], ['\\(', '\\)']]
-    display_math_delimiters: [['$$', '$$'], ['\\[', '\\]']]
-
+    # 內嵌公式使用 \(...\) 分隔符
+    inline_math_delimiters: ['\\(', '\\)']
+    # 區塊公式仍然以 $$...$$ 表示
+    display_math_delimiters: [['$$', '$$']]
 
 # 啟用 Not Pure Poole 主題
 remote_theme: vszhub/not-pure-poole

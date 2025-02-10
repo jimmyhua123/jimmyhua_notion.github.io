@@ -29,7 +29,7 @@ $$
 - $\mathbf{B} \in \mathbb{R}^{d \times r}$
 - $\mathbf{A} \in \mathbb{R}^{r \times k}$
 - $r \ll \min(d,k)$（秩 $r$ 遠小於原始矩陣維度）
-  ![image]({{ site.baseurl }}/images/196fbb85-7f9e-8050-9627-c85ad4b2fbdb.png)
+
 
 
 ![image]({{ site.baseurl }}/images/196fbb85-7f9e-8050-9627-c85ad4b2fbdb.png)

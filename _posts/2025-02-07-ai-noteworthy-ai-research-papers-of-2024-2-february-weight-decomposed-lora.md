@@ -36,10 +36,14 @@ math: true
 \mathbf{W} = \mathbf{W}_0 + \Delta \mathbf{W}
 
 1. LoRA 假設 權重更新 $\Delta W$ 可用兩個低秩矩陣的乘積來近似：
-其中：\Delta\mathbf{W}\approx\mathbf{BA} 
-- \mathbf{B} \in \mathbb{R}^{d \times r}
-- \mathbf{A} \in \mathbb{R}^{r \times k}
-- r \ll \min(d,k)（秩 r 遠小於原始矩陣維度）
+其中:
+$$
+\Delta\mathbf{W}\approx\mathbf{BA}
+$$
+
+- **$\mathbf{B} \in \mathbb{R}^{d \times r}$**
+- **$\mathbf{A} \in \mathbb{R}^{r \times k}$**
+- **$r \ll \min(d,k)$**（秩 $r$ 遠小於原始矩陣維度）
   ![image]({{ site.baseurl }}/images/196fbb85-7f9e-8050-9627-c85ad4b2fbdb.png)
 
 

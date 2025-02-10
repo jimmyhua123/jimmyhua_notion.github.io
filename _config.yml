@@ -12,6 +12,7 @@ paginate: 5
 markdown: kramdown
 kramdown:
   input: GFMKatex
+  math_engine: mathjax
 
 
 # 啟用 Not Pure Poole 主題

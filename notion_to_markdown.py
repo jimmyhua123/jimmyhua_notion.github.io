@@ -124,13 +124,13 @@ def download_image(image_url: str, block_id: str) -> str:
 
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     md_text_parts = []
-    # 正則替換：將單一美元符號內的內容替換成 <span class="math-inline">\(...\)</span>
+    # 定義正則，捕捉被單個美元符號包住的內容
     inline_math_pattern = re.compile(r'\$(.+?)\$')
     
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
-        # 將所有 $...$ 轉換成 <span class="math-inline">\(...\)</span>
-        text_content = inline_math_pattern.sub(r'<span class="math-inline">\\(\1\\)</span>', text_content)
+        # 將所有 $...$ 改成 $$...$$
+        text_content = inline_math_pattern.sub(lambda m: "$$" + m.group(1) + "$$", text_content)
         
         link_url = None
         if rt.get("href"):

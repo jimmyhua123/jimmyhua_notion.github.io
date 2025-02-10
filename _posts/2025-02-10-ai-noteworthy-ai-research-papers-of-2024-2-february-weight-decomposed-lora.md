@@ -26,7 +26,7 @@ $$
 \Delta\mathbf{W}\approx\mathbf{BA}
 $$
 
-- $\mathbf{B} \in \mathbb{R}^{d \times r}$
+- $$\mathbf{B} \in \mathbb{R}^{d \times r}$$
 - $\mathbf{A} \in \mathbb{R}^{r \times k}$
 - $r \ll \min(d,k)$（秩 $r$ 遠小於原始矩陣維度）
 

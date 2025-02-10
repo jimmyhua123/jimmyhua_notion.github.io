@@ -4,6 +4,8 @@ import datetime
 import re
 import glob
 import unicodedata
+from urllib.parse import urlparse
+
 # ----------------------------------------------------------------------
 # 1. 讀取 Notion Token & Page ID 設定
 # ----------------------------------------------------------------------
@@ -32,7 +34,7 @@ def slugify(text):
 # ----------------------------------------------------------------------
 # 2. 取得頁面標題 (選擇用 retrieve_page，或直接從 child_page["title"] 取)
 # ----------------------------------------------------------------------
-def retrieve_page_title(page_id: str) -> str:
+def retrieve_page_title(page_id: str) -> tuple:
     """
     獲取 Notion 頁面標題，並產生 `slug`
     """
@@ -63,11 +65,9 @@ def fetch_notion_blocks(page_id: str) -> list:
     while True:
         resp = requests.get(url, headers=HEADERS, params=params)
         data = resp.json()
-        # save_notion_response(page_id, data)
         for block in data.get("results", []):
             all_blocks.append(block)
-
-            # **如果這個 block 是 Table，且 has_children=True，需要進一步抓取內容**
+            # 如果該 block 有子區塊，則進一步抓取
             if block.get("has_children", False):
                 child_blocks = fetch_notion_blocks(block["id"])
                 all_blocks.extend(child_blocks)
@@ -80,20 +80,60 @@ def fetch_notion_blocks(page_id: str) -> list:
     return all_blocks
 
 # ----------------------------------------------------------------------
+# 新增函式：下載圖片並儲存到本機
+# ----------------------------------------------------------------------
+def download_image(image_url: str, block_id: str) -> str:
+    """
+    下載圖片並儲存到本機 images 資料夾，回傳圖片的相對路徑 (供 Markdown 使用)
+    """
+    images_dir = "images"
+    if not os.path.exists(images_dir):
+        os.makedirs(images_dir)
+
+    # 利用 urlparse 解析圖片 URL，取得檔案路徑與副檔名
+    parsed_url = urlparse(image_url)
+    path = parsed_url.path
+    ext = os.path.splitext(path)[1]
+    if not ext:
+        ext = ".jpg"  # 預設副檔名
+
+    local_filename = f"{block_id}{ext}"
+    local_path = os.path.join(images_dir, local_filename)
+
+    # 若圖片尚未下載，則進行下載
+    if not os.path.exists(local_path):
+        try:
+            r = requests.get(image_url, stream=True, timeout=10)
+            if r.status_code == 200:
+                with open(local_path, "wb") as f:
+                    for chunk in r.iter_content(1024):
+                        f.write(chunk)
+                print(f"下載圖片成功: {local_path}")
+            else:
+                print(f"下載圖片失敗: {image_url}，狀態碼: {r.status_code}")
+        except Exception as e:
+            print(f"下載圖片失敗: {image_url}，錯誤: {e}")
+    else:
+        print(f"圖片已存在，跳過下載: {local_path}")
+
+    # 回傳圖片在網站中的相對路徑
+    # 此處採用絕對路徑 '/images/filename'，若需要相對路徑請自行調整
+    return f"/images/{local_filename}"
+
+# ----------------------------------------------------------------------
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）
 # ----------------------------------------------------------------------
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     """
-    處理 notion API 回傳的 rich_text 陣列，將超連結轉為 Markdown 格式。
-    - 如果該 text 有 link，就回傳 [文字](連結)
-    - 否則就直接回傳文字
+    處理 Notion API 回傳的 rich_text 陣列，將超連結轉為 Markdown 格式。
+    - 若該文字有 link，則回傳 [文字](連結)
+    - 否則直接回傳文字
     """
     md_text_parts = []
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
         link_url = None
 
-        # 正確獲取超連結
         if rt.get("href"):  # 第一種可能
             link_url = rt.get("href")
         elif rt.get("text") and rt["text"].get("link"):  # 第二種可能
@@ -109,10 +149,8 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
 
 def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
     """
-    將單一個 notion block 轉為 Markdown 的字串。
-    僅示範常見的 paragraph, heading, bulleted_list_item, numbered_list_item, 
-    equation, code, image, divider, quote, etc.
-    如需 child_page, child_database 則視情況自行處理。
+    將單一 Notion block 轉為 Markdown 的字串。
+    示範常見的 block 類型：paragraph, heading, list, equation, code, image, divider, quote, table 等。
     """
     btype = block.get("type", "")
     # 1. 段落 paragraph
@@ -137,34 +175,28 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
         heading_text = rich_text_array_to_markdown(texts)
         return f"### {heading_text}\n\n"
 
-    # 3. 處理清單 bulleted_list_item / numbered_list_item
+    # 3. 清單 bulleted_list_item / numbered_list_item
     elif btype == "bulleted_list_item":
         texts = block[btype].get("rich_text", [])
-        children = block.get("has_children", False)  # 是否有子內容
         list_text = rich_text_array_to_markdown(texts)
-
-        if children:
-            sub_blocks = fetch_notion_blocks(block["id"])  # 獲取子區塊
+        if block.get("has_children", False):
+            sub_blocks = fetch_notion_blocks(block["id"])
             sub_texts = [block_to_markdown(sub) for sub in sub_blocks]
-            sub_content = "\n  ".join(sub_texts)  # 縮排處理
+            sub_content = "\n  ".join(sub_texts)
             return f"- {list_text}\n  {sub_content}\n"
         else:
             return f"- {list_text}\n"
 
-
     elif btype == "numbered_list_item":
         texts = block[btype].get("rich_text", [])
-        children = block.get("has_children", False)
         list_text = rich_text_array_to_markdown(texts)
-
-        if children:
+        if block.get("has_children", False):
             sub_blocks = fetch_notion_blocks(block["id"])
             sub_texts = [block_to_markdown(sub) for sub in sub_blocks]
             sub_content = "\n  ".join(sub_texts)
             return f"1. {list_text}\n  {sub_content}\n"
         else:
             return f"1. {list_text}\n"
-
 
     # 4. 數學方程式 equation
     elif btype == "equation":
@@ -178,21 +210,16 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
         language = block[btype].get("language", "plaintext")
         return f"```{language}\n{code_text}\n```\n\n"
 
-    # 6. 圖片 image
-    if btype == "image":
+    # 6. 圖片 image（優化圖片處理：下載圖片並引用本地路徑）
+    elif btype == "image":
         image_data = block[btype]
         if image_data.get("type") == "external":
             url = image_data["external"].get("url", "")
         else:
             url = image_data["file"].get("url", "")
+        local_url = download_image(url, block["id"])
+        return f"![image]({local_url})\n\n"
 
-        # 保留原始 URL，不下載圖片
-        print(f"跳過圖片下載，使用原始 URL: {url}")
-
-        # 返回 Markdown 格式的圖片引用
-        return f"![image]({url})\n\n"
-
-    
     # 7. 分隔線 divider
     elif btype == "divider":
         return "---\n\n"
@@ -201,44 +228,32 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
     elif btype == "quote":
         texts = block[btype].get("rich_text", [])
         quote_text = rich_text_array_to_markdown(texts)
-        # 可以用 Markdown 的引用符號 '>' 來表示
         return f"> {quote_text}\n\n"
 
+    # 9. 表格 table
     elif btype == "table":
         table_info = block.get("table", {})
-        table_width = table_info.get("table_width", 3)  # 取得表格欄位數量
-
-        # 確保有 `children` 來存放表格行
+        table_width = table_info.get("table_width", 3)
         if block.get("has_children", False):
-            table_rows = fetch_notion_blocks(block["id"])  # 取得子區塊
+            table_rows = fetch_notion_blocks(block["id"])
         else:
             return ""
-
-        # 儲存 Markdown 表格
         md_table = []
         for row in table_rows:
             if row["type"] == "table_row":
                 cells = row["table_row"].get("cells", [])
                 md_row = " | ".join(rich_text_array_to_markdown(cell) for cell in cells)
                 md_table.append(f"| {md_row} |")
-
-        # 加上表頭與分隔線
         if md_table:
-            headers = md_table[0]  # 第一行作為標題
             separator = "| " + " | ".join(["---"] * table_width) + " |"
             md_table.insert(1, separator)
-
         return "\n".join(md_table) + "\n\n"
 
-    # 若遇到 child_page / child_database，就不在這裡轉 Markdown，
-    # 而是交給外層做遞迴，以產生新的文章或檔案
-    elif btype == "child_page" or btype == "child_database":
+    # 若遇到 child_page / child_database，則交由外層遞迴處理
+    elif btype in ["child_page", "child_database"]:
         return ""
 
-    # ... 其餘 block 類型可自行擴充 ...
-    #   e.g. video, embed, file, toggle, callout 等
-
-    # 如果遇到不支援的區塊類型，這裡視需求決定如何處理：可忽略或回傳空字串。
+    # 其他不支援的 block 類型，回傳空字串
     return ""
 
 # ----------------------------------------------------------------------
@@ -257,7 +272,6 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
 
     # 取得標題與 slug
     page_title, slug = retrieve_page_title(page_id)
-
     if parent_slug:
         slug = f"{parent_slug}-{slug}"
 
@@ -276,11 +290,11 @@ def parse_and_export_recursively(page_id: str, parent_slug: str = None):
     # 合成 Markdown 內容
     page_markdown = "".join(page_markdown_parts)
 
-    # 如果有子頁面，避免生成不必要的父級文章
+    # 若沒有子頁面則生成文章
     if not child_pages:
         upsert_post_with_date_update(slug, page_title, page_markdown, categories=["NotionExport"])
 
-    # 處理子頁面
+    # 遞迴處理子頁面
     for child_block in child_pages:
         child_id = child_block["id"]
         parse_and_export_recursively(child_id, parent_slug=slug)
@@ -293,7 +307,7 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     # 查找是否已有該標題的文章
     existing_files = glob.glob(f"_posts/*-{slug}.md")
     if existing_files:
-        filename = existing_files[0]  # 使用第一個匹配的檔案
+        filename = existing_files[0]
         with open(filename, "r", encoding="utf-8") as f:
             old_full_content = f.read()
     else:
@@ -307,7 +321,7 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
             os.remove(file)
             print(f"⚠️ 刪除重複檔案：{file}")
 
-    # 提取舊的 front matter 和內容
+    # 提取舊的 front matter 與內容
     match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
     if match:
         old_front = match.group(1).strip()
@@ -316,7 +330,7 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         old_front = ""
         old_body = old_full_content.strip()
 
-    # 更新 `date:` 並確保 front matter 完整
+    # 更新 front matter（保留原有資料並更新日期）
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
     front_matter_dict = {
         "layout": "post",
@@ -332,7 +346,6 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
             if value:
                 front_matter_dict[key] = value[0].strip()
 
-    # 更新完整內容
     updated_front_matter = "---\n" + "\n".join(f"{key}: {value}" for key, value in front_matter_dict.items()) + "\n---\n"
     updated_full = updated_front_matter + "\n" + new_markdown.strip() + "\n"
 
@@ -358,7 +371,7 @@ def main():
     except Exception as e:
         print(f"❌ 錯誤發生：{e}")
         import traceback
-        traceback.print_exc()  # 顯示完整錯誤訊息，方便除錯
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()

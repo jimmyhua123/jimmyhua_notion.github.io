@@ -67,16 +67,14 @@ def fetch_notion_blocks(page_id: str) -> list:
         data = resp.json()
         for block in data.get("results", []):
             all_blocks.append(block)
-            # 如果該 block 有子區塊，則進一步抓取
-            if block.get("has_children", False):
+            # 若 block 有子區塊，僅對非 image 類型進行遞迴（避免圖片重複）
+            if block.get("has_children", False) and block.get("type") != "image":
                 child_blocks = fetch_notion_blocks(block["id"])
                 all_blocks.extend(child_blocks)
-
         if data.get("has_more"):
             params["start_cursor"] = data["next_cursor"]
         else:
             break
-
     return all_blocks
 
 # ----------------------------------------------------------------------
@@ -125,25 +123,30 @@ def download_image(image_url: str, block_id: str) -> str:
 # ----------------------------------------------------------------------
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     """
-    處理 Notion API 回傳的 rich_text 陣列，將超連結轉為 Markdown 格式。
-    - 若該文字有 link，則回傳 [文字](連結)
-    - 否則直接回傳文字
+    處理 Notion API 回傳的 rich_text 陣列，將超連結轉為 Markdown 格式，
+    同時處理內嵌數學公式（type 為 "equation"），使用雙美元符號包覆
     """
     md_text_parts = []
     for rt in rich_text_array:
+        # 若此 token 為數學公式，取出 expression 並用 $$ 包覆
+        if rt.get("type") == "equation":
+            eq_expr = rt.get("equation", {}).get("expression", "")
+            md_text_parts.append(f"$${eq_expr}$$")
+            continue
+
         text_content = rt.get("plain_text", "")
         link_url = None
 
-        if rt.get("href"):  # 第一種可能
+        # 判斷是否有超連結
+        if rt.get("href"):
             link_url = rt.get("href")
-        elif rt.get("text") and rt["text"].get("link"):  # 第二種可能
+        elif rt.get("text") and rt["text"].get("link"):
             link_url = rt["text"]["link"].get("url")
 
         if link_url:
             md_text_parts.append(f"[{text_content}]({link_url})")
         else:
             md_text_parts.append(text_content)
-
     return "".join(md_text_parts)
 
 

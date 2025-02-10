@@ -13,7 +13,10 @@ markdown: kramdown
 kramdown:
   input: GFM
   hard_wrap: false
-
+  math_engine: katex
+  math_engine_opts:
+    # delimiters:
+    #   inline: ["$", "$"]  # 或者改為 ["\\(", "\\)"]
 # 啟用 Not Pure Poole 主題
 remote_theme: vszhub/not-pure-poole
 

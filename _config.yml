@@ -12,9 +12,7 @@ paginate: 5
 markdown: kramdown
 kramdown:
   input: GFMKatex
-  math_engine: mathjax
-  math_engine_opts:
-    inline_math_delimiters: ["\\(", "\\)"]
+
 
 # 啟用 Not Pure Poole 主題
 remote_theme: vszhub/not-pure-poole

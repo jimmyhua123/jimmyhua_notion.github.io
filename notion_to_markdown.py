@@ -121,18 +121,19 @@ def download_image(image_url: str, block_id: str) -> str:
 # ----------------------------------------------------------------------
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）
 # ----------------------------------------------------------------------
+
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     md_text_parts = []
+    # 正則替換：將單一美元符號內的內容替換成 <span class="math-inline">\(...\)</span>
+    inline_math_pattern = re.compile(r'\$(.+?)\$')
+    
     for rt in rich_text_array:
-        # 取得原始文本
         text_content = rt.get("plain_text", "")
-        # 若文本中出現 $...$（單一美元符號包覆），將其轉換為 \(...\)
-        # 注意：這個替換會把所有 $...$ 內容都當作數學公式處理，
-        # 若你文件中有正常的 $ 符號，請酌情調整正則表達式以避免誤替換
-        text_content = re.sub(r'\$(.+?)\$', r'\\(\1\\)', text_content)
+        # 將所有 $...$ 轉換成 <span class="math-inline">\(...\)</span>
+        text_content = inline_math_pattern.sub(r'<span class="math-inline">\\(\1\\)</span>', text_content)
         
         link_url = None
-        if rt.get("href"):  # 第一種可能
+        if rt.get("href"):
             link_url = rt.get("href")
         elif rt.get("text") and rt["text"].get("link"):
             link_url = rt["text"]["link"].get("url")

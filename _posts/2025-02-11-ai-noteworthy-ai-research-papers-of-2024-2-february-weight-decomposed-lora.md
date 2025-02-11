@@ -53,16 +53,9 @@ $$
 - $$A$$ 通常使用均勻的 Kaiming 分佈 初始化，而 $$B$$ 則初始化為零，確保在訓練開始時 $$\Delta W = BA = 0$$。
 ### 2️⃣ 前向傳遞
 
-- 當輸入通過模型層時，原始權重 $$W$$ 和低秩更新 $$BA$$ 的輸出會相加：
-  $$$\text{output} = (\mathbf{W} + \mathbf{BA})\mathbf{x}$$$
-
-
-  其中 $$x$$ 是輸入向量。
-
-
-$$$\text{output} = (\mathbf{W} + \mathbf{BA})\mathbf{x}$$$
-
+- 當輸入通過模型層時，原始權重 $$W$$ 和低秩更新 $$BA$$ 的輸出會相加：$$\text{output} = (\mathbf{W} + \mathbf{BA})\mathbf{x}$$
 其中 $$x$$ 是輸入向量。
+
 
 ### 3️⃣ 反向傳遞
 

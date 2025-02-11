@@ -6,4 +6,4 @@ categories: ['NotionExport']
 math: true
 ---
 
-https://arxiv.org/abs/2407.21783[https://arxiv.org/abs/2407.21783](https://arxiv.org/abs/2407.21783)
+[https://arxiv.org/abs/2407.21783](https://arxiv.org/abs/2407.21783)

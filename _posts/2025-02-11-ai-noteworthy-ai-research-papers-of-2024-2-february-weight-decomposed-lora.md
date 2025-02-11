@@ -153,9 +153,7 @@ $$
 ### 1️⃣ 權重分解（Decompose）
 
 $$
-
 \mathbf{W} = \mathbf{m} \times \mathbf{V}
-
 $$
 
 - $$m$$（量值，Magnitude）：控制權重的大小
@@ -166,9 +164,7 @@ $$
 
 - 僅更新方向矩陣 $$V$$，採用 LoRA 風格的低秩更新
 $$
-
 \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
-
 $$
 
 - 這種方法能 有效降低參數更新量，提升訓練效率 📉
@@ -184,9 +180,7 @@ $$
 
 - 最終部署時，會將 $$m$$ 和 $$V$$ 的更新結果合併回原始權重：
 $$
-
 \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
-
 $$
 
 ✅ 優勢：

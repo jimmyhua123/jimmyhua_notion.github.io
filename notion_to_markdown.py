@@ -125,14 +125,20 @@ def download_image(image_url: str, block_id: str) -> str:
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     md_text_parts = []
     
-    # 定義正則表達式，只匹配單獨的 "$...$"，但不匹配 "$$...$$"
+    # 只匹配單 $，但不影響原本的區塊公式 $$...$$
     inline_math_pattern = re.compile(r'(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)')
     
+    # 處理 **$...$** 這種情況
+    bold_inline_math_pattern = re.compile(r'\*\*(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)\*\*')
+
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
 
-        # 只將單 $ 轉換為 $$，避免影響原本的區塊數學公式
-        text_content = inline_math_pattern.sub(lambda m: "$$" + m.group(1) + "$$", text_content)
+        # 先處理 **$...$** 變成 **$$...$$**
+        text_content = bold_inline_math_pattern.sub(lambda m: f"**$$ {m.group(1)} $$**", text_content)
+
+        # 再處理一般行內數學公式 $...$ 變成 $$...$$
+        text_content = inline_math_pattern.sub(lambda m: f"$$ {m.group(1)} $$", text_content)
 
         link_url = None
         if rt.get("href"):

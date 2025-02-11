@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "2. February: Weight-decomposed LoRA"
-date: 2025-02-10 10:00:00 +0800
+date: 2025-02-11 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---
@@ -15,20 +15,16 @@ math: true
 
 1.2 數學解釋 🔢
 
-1. 假設預訓練權重矩陣為 $$W_0$$，微調時，權重變為：
-$$
+1. 假設預訓練權重矩陣為 W_0，微調時，權重變為：
 \mathbf{W} = \mathbf{W}_0 + \Delta \mathbf{W}
-$$
 
-1. LoRA 假設 權重更新 $$\Delta W$$ 可用兩個低秩矩陣的乘積來近似：
+1. LoRA 假設 權重更新 \Delta W 可用兩個低秩矩陣的乘積來近似：
 其中：
-$$
-\Delta\mathbf{W}\approx\mathbf{BA}
-$$
-
-- $$\mathbf{B} \in \mathbb{R}^{d \times r}$$  $$\mathbf{A} \in \mathbb{R}^{r \times k}$$
-- $$r \ll \min(d,k)$$  （秩 $$r$$ 遠小於原始矩陣維度）
-1. 在 LoRA 設定下，僅需訓練這兩個小矩陣 $$\mathbf{A}, \mathbf{B}$$，即可在新任務上微調模型，顯著減少參數更新量。
+- \Delta\mathbf{W}\approx\mathbf{BA}
+- \mathbf{B} \in \mathbb{R}^{d \times r} 
+-  \mathbf{A} \in \mathbb{R}^{r \times k}
+- r \ll \min(d,k)  （秩 r 遠小於原始矩陣維度）
+1. 在 LoRA 設定下，僅需訓練這兩個小矩陣 \mathbf{A}, \mathbf{B}，即可在新任務上微調模型，顯著減少參數更新量。
 
 
 ![image]({{ site.baseurl }}/images/196fbb85-7f9e-8050-9627-c85ad4b2fbdb.png)
@@ -78,38 +74,32 @@ $$
 - 方向 V：權重向量的指向。
 > 與 LoRA 的差異：
 
-- LoRA 直接對 $$\Delta\mathbf{W}$$ 進行低秩近似。
-- DoRA 先將權重 $$\mathbf{W}$$ 分解為 $$(m, \mathbf{V})$$，再針對「方向」V 進行低秩更新，同時允許「量值」m 調整。
+- LoRA 直接對 \Delta\mathbf{W} 進行低秩近似。
+- DoRA 先將權重 \mathbf{W} 分解為 (m, \mathbf{V})，再針對「方向」V 進行低秩更新，同時允許「量值」m 調整。
+![image]({{ site.baseurl }}/images/197fbb85-7f9e-8054-8cd4-d99988309113.png)
+
 ## 2.2 DoRA 的運作機制 ⚙️
 
 1. 權重分解（Decompose）
-  $$
-\mathbf{W} = \mathbf{m} \times \mathbf{V}
-$$
+  \mathbf{W} = \mathbf{m} \times \mathbf{V}
 
 
   - $$m$$：代表「量值」
 
   - $$V$$：代表「方向」
 
-$$
 \mathbf{W} = \mathbf{m} \times \mathbf{V}
-$$
 
 - $$m$$：代表「量值」
 - $$V$$：代表「方向」
 1. 方向更新（Direction Update）
   - 只對 方向矩陣 V 進行 LoRA 風格的低秩更新：
 
-  $$
-\Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
-$$
+  \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
 
 
 - 只對 方向矩陣 V 進行 LoRA 風格的低秩更新：
-$$
 \Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
-$$
 
 1. 量值更新（Magnitude Update）
   - 量值向量 $$m$$ 也可更新，但不像方向那樣使用低秩矩陣，而是獨立調整。
@@ -118,17 +108,13 @@ $$
 1. 權重合併（Merge）（推理時）
   - 部署時，將更新後的 $$m$$ 和 $$V$$ 合併回原始權重：
 
-  $$
-\mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
-$$
+  \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
 
 
   - 不額外增加推理計算成本。
 
 - 部署時，將更新後的 $$m$$ 和 $$V$$ 合併回原始權重：
-$$
 \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
-$$
 
 - 不額外增加推理計算成本。
 # 3️⃣ 小結

@@ -131,14 +131,14 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
         text_content = rt.get("plain_text", "")
         # 進行替換：將所有 $...$ 換成 $$...$$
         for rt in rich_text_array:
-            text_content = rt.get("plain_text", "")
-            # 如果文本剛好是 "---"，可以單獨處理（例如輸出 \n---\n）
-            if text_content.strip() == "---":
-                md_text_parts.append("\n---\n")
-                continue
+        text_content = rt.get("plain_text", "")
+        # 如果文本剛好是 "---"，可以單獨處理（例如輸出 \n---\n）
+        if text_content.strip() == "---":
+            md_text_parts.append("\n---\n")
+            continue
 
-            new_text = inline_math_pattern.sub(lambda m: "\n$$" + m.group(1).strip() + "$$\n", text_content)
-            md_text_parts.append(new_text)    
+        new_text = inline_math_pattern.sub(lambda m: "\n$$" + m.group(1).strip() + "$$\n", text_content)
+        md_text_parts.append(new_text)    
         # 印出除錯資訊，檢查轉換前後的差異
         # print("原始文本：", text_content)
         # print("替換後：", new_text)

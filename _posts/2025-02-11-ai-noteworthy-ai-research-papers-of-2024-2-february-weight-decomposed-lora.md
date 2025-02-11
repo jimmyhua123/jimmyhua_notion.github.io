@@ -11,9 +11,9 @@ math: true
 1. DoRA: [DoRA: Weight-Decomposed Low-Rank Adaptation](https://arxiv.org/abs/2402.09353)
 1. LoRA: [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)
 1. LoRA Survey: [A Survey on LoRA of Large Language Models](https://arxiv.org/abs/2106.09685)
+---
 
-
-1.2 數學解釋 🔢
+## 1.1 數學解釋 🔢
 
 1. 假設預訓練權重矩陣為 $$W_0$$，微調時，權重變為：
 $$
@@ -35,7 +35,7 @@ $$
 
 > 小結：LoRA 只調整小規模的低秩矩陣，保留了原始模型的能力，同時讓微調變得更輕量。
 
-## 1.3 LoRA 的效率與影響 🚀
+## 1.2 LoRA 的效率與影響 🚀
 
 ### ✅ 參數效率
 
@@ -53,7 +53,9 @@ $$
 
 - 更高訓練吞吐量：因為更新參數少，微調速度更快。
 - 不增加推理延遲：LoRA 更新矩陣形狀與原模型一致，推理時無需額外計算。
-## 1.4 LoRA 的優勢總結 ✅
+
+
+## 1.3 LoRA 的優勢總結 ✅
 
 | 優勢 | 描述 |
 | --- | --- |
@@ -62,6 +64,8 @@ $$
 | 零額外推理延遲 | 微調後的推理開銷與原模型相同。 |
 | 可插拔性 | 可以輕鬆切換 LoRA 模組，支持多任務。 |
 | 易於實作 | 目前已有許多開源庫支援，開發門檻低。 |
+
+---
 
 # 2️⃣ DoRA：Weight-Decomposed LoRA
 
@@ -80,8 +84,6 @@ $$
 
 - LoRA 直接對 $$\Delta\mathbf{W}$$ 進行低秩近似。
 - DoRA 先將權重 $$\mathbf{W}$$ 分解為 $$(m, \mathbf{V})$$，再針對「方向」V 進行低秩更新，同時允許「量值」m 調整。
-![image]({{ site.baseurl }}/images/197fbb85-7f9e-8054-8cd4-d99988309113.png)
-
 ## 2.2 DoRA 的運作機制 ⚙️
 
 1. 權重分解（Decompose）
@@ -127,13 +129,23 @@ $$
 
   - 不額外增加推理計算成本。
 
+  
+
+
+  ![image]({{ site.baseurl }}/images/197fbb85-7f9e-8054-8cd4-d99988309113.png)
+
+
 - 部署時，將更新後的 $$m$$ 和 $$V$$ 合併回原始權重：
 $$
 \mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
 $$
 
 - 不額外增加推理計算成本。
+
+
+![image]({{ site.baseurl }}/images/197fbb85-7f9e-8054-8cd4-d99988309113.png)
+
 # 3️⃣ 小結
 
-- LoRA：針對權重更新 $$\Delta\mathbf{W}$$ 進行低秩近似，實現高效微調。
+- LoRA：主要應用於 Transformer 架構的線性層（dense layers），尤其是 self-attention 模組中的權重矩陣，針對權重更新 $$\Delta\mathbf{W}$$ 進行低秩近似，實現高效微調。
 - DoRA：進一步拆解權重為 (magnitude, direction)，並 只對方向進行低秩更新，帶來更好的效能與靈活性。

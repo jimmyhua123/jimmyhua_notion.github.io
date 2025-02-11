@@ -122,36 +122,32 @@ def download_image(image_url: str, block_id: str) -> str:
 # 4. 將單一 block 轉成 Markdown（忽略 child_page）
 # ----------------------------------------------------------------------
 
+
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     md_text_parts = []
+    inline_math_pattern = re.compile(r'\$(.+?)\$')
     
-    # 只匹配單 $，但不影響原本的區塊公式 $$...$$
-    inline_math_pattern = re.compile(r'(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)')
-    
-    # 處理 **$...$** 這種情況
-    bold_inline_math_pattern = re.compile(r'\*\*(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)\*\*')
-
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
-
-        # 先處理 **$...$** 變成 **$$...$$**
-        text_content = bold_inline_math_pattern.sub(lambda m: f"**$$ {m.group(1)} $$**", text_content)
-
-        # 再處理一般行內數學公式 $...$ 變成 $$...$$
-        text_content = inline_math_pattern.sub(lambda m: f"$$ {m.group(1)} $$", text_content)
-
+        # 進行替換：將所有 $...$ 換成 $$...$$
+        new_text = inline_math_pattern.sub(lambda m: "$$" + m.group(1) + "$$", text_content)
+        # 印出除錯資訊，檢查轉換前後的差異
+        print("原始文本：", text_content)
+        print("替換後：", new_text)
+        
         link_url = None
         if rt.get("href"):
             link_url = rt.get("href")
         elif rt.get("text") and rt["text"].get("link"):
             link_url = rt["text"]["link"].get("url")
-
+        
         if link_url:
-            md_text_parts.append(f"[{text_content}]({link_url})")
+            md_text_parts.append(f"[{new_text}]({link_url})")
         else:
-            md_text_parts.append(text_content)
-
-    return "".join(md_text_parts)
+            md_text_parts.append(new_text)
+    result = "".join(md_text_parts)
+    print("最終轉換結果：", result)
+    return result
 
 def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
     """

@@ -214,4 +214,4 @@ W′=(m+Δm)×(V+ΔV)\mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mat
 
 - LoRA：透過 $$W \approx W_0 + BA$$ 進行微調，並調整 秩 $$r$$，但並非單純地調整 $$r$$，而是更新兩個低秩矩陣 $$B$$ 和 $$A$$，以實現參數高效微調。
 - DoRA：先將權重拆解為 $$W \approx m \cdot v$$（幅度 $$m$$ 和方向 $$v$$），再僅微調 $$m$$，並對 $$v$$ 應用 LoRA（即 $$v \rightarrow BA$$），最後合併兩者。
-🔹 結論：LoRA 和 DoRA 雖然都基於低秩近似來減少參數更新，但 DoRA 進一步優化了權重更新方式，使微調更加靈活且高效！ 🚀
+- 結論：LoRA 和 DoRA 雖然都基於低秩近似來減少參數更新，但 DoRA 進一步優化了權重更新方式，使微調更加靈活且高效！ 🚀

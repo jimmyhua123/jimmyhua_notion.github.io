@@ -130,7 +130,14 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
         # 進行替換：將所有 $...$ 換成 $$...$$
-        new_text = inline_math_pattern.sub(lambda m: "$$" + m.group(1) + "$$", text_content)
+        def replace_math(match):
+                    content = match.group(1)
+                    # 若內容前後已包含 $$，則不再替換
+                    if content.startswith('$') and content.endswith('$'):
+                        return match.group(0)
+                    return "$$" + content + "$$"
+        
+        new_text = inline_math_pattern.sub(replace_math, text_content)    
         # 印出除錯資訊，檢查轉換前後的差異
         # print("原始文本：", text_content)
         # print("替換後：", new_text)

@@ -124,24 +124,27 @@ def download_image(image_url: str, block_id: str) -> str:
 
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
     md_text_parts = []
-    # 定義正則，捕捉被單個美元符號包住的內容
-    inline_math_pattern = re.compile(r'\$(.+?)\$')
+    
+    # 定義正則表達式，只匹配單獨的 "$...$"，但不匹配 "$$...$$"
+    inline_math_pattern = re.compile(r'(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)')
     
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
-        # 將所有 $...$ 改成 $$...$$
+
+        # 只將單 $ 轉換為 $$，避免影響原本的區塊數學公式
         text_content = inline_math_pattern.sub(lambda m: "$$" + m.group(1) + "$$", text_content)
-        
+
         link_url = None
         if rt.get("href"):
             link_url = rt.get("href")
         elif rt.get("text") and rt["text"].get("link"):
             link_url = rt["text"]["link"].get("url")
-        
+
         if link_url:
             md_text_parts.append(f"[{text_content}]({link_url})")
         else:
             md_text_parts.append(text_content)
+
     return "".join(md_text_parts)
 
 def block_to_markdown(block: dict, article_title: str = "untitled") -> str:

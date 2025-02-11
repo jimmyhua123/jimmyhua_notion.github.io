@@ -132,8 +132,8 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
         # 進行替換：將所有 $...$ 換成 $$...$$
         new_text = inline_math_pattern.sub(lambda m: "$$" + m.group(1) + "$$", text_content)
         # 印出除錯資訊，檢查轉換前後的差異
-        print("原始文本：", text_content)
-        print("替換後：", new_text)
+        # print("原始文本：", text_content)
+        # print("替換後：", new_text)
         
         link_url = None
         if rt.get("href"):
@@ -146,7 +146,7 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
         else:
             md_text_parts.append(new_text)
     result = "".join(md_text_parts)
-    print("最終轉換結果：", result)
+    # print("最終轉換結果：", result)
     return result
 
 def block_to_markdown(block: dict, article_title: str = "untitled") -> str:

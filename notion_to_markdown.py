@@ -339,15 +339,14 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         old_front = ""
         old_body = old_full_content.strip()
 
-    # 設定最新日期
+    # 正確設定 date，只在內容更新時才更新 date
     today_str = datetime.datetime.now().strftime("%Y-%m-%d")
     new_date = f"{today_str} 10:00:00 +0800"
-
+    
     # 更新 front matter（保留其他欄位，但不覆蓋 date）
     front_matter_dict = {
         "layout": "post",
         "title": f'"{title}"',
-        "date": new_date,
         "categories": categories if categories else ["NotionExport"],
         "math": "true"
     }
@@ -355,13 +354,13 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         for line in old_front.split("\n"):
             key, *value = line.split(":", 1)
             key = key.strip()
-            # 若 key 為 date 則跳過，避免覆蓋新日期
             if key != "date" and value:
                 front_matter_dict[key] = value[0].strip()
-
-    # 最後再重新設定一次 date，確保為最新日期
-    front_matter_dict["date"] = new_date
-
+    
+    # 如果內容有更新，才更新 date
+    if old_body != new_markdown.strip():
+        front_matter_dict["date"] = new_date
+    
     updated_front_matter = "---\n" + "\n".join(f"{key}: {value}" for key, value in front_matter_dict.items()) + "\n---\n"
     updated_full = updated_front_matter + "\n" + new_markdown.strip() + "\n"
 
@@ -370,7 +369,7 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
             f.write(updated_full)
         print(f"[UPDATE] {filename} 內容變更，日期已更新")
     else:
-        print(f"[NO CHANGE] {filename} 內容未變更，無需更新")
+        print(f"[NO CHANGE] {filename} 內容未變更，日期保持原樣")
 
 # ----------------------------------------------------------------------
 # 7. Main：指定最上層頁面ID，開始遞迴

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "3. March: Tips for Continually Pretraining LLMs"
-date: 2025-02-11 10:00:00 +0800
+date: 2025-02-07 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---

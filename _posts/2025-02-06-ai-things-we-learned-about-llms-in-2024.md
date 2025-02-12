@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Things we learned about LLMs in 2024"
-date: 2025-02-11 10:00:00 +0800
+date: 2025-02-06 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---

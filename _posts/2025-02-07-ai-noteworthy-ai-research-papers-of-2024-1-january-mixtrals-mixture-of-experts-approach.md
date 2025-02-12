@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "1. January Mixtral's Mixture of Experts Approach"
-date: 2025-02-11 10:00:00 +0800
+date: 2025-02-07 10:00:00 +0800
 categories: ['NotionExport']
 math: true
 ---

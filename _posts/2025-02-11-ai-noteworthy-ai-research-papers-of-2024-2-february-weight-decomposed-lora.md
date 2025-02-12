@@ -1,9 +1,9 @@
 ---
 layout: post
 title: "2. February: Weight-decomposed LoRA"
-date: 2025-02-11 10:00:00 +0800
 categories: ['NotionExport']
 math: true
+date: 2025-02-12 10:00:00 +0800
 ---
 
 # 📚 參考文獻
@@ -11,8 +11,7 @@ math: true
 1. DoRA: [DoRA: Weight-Decomposed Low-Rank Adaptation](https://arxiv.org/abs/2402.09353)
 1. LoRA: [LoRA: Low-Rank Adaptation of Large Language Models](https://arxiv.org/abs/2106.09685)
 1. LoRA Survey: [A Survey on LoRA of Large Language Models](https://arxiv.org/abs/2106.09685)
-
-
+1. 內文中的圖片連結 : [https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-1](https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-1)
 ---
 
 
@@ -153,7 +152,9 @@ $$
 ### 1️⃣ 權重分解（Decompose）
 
 $$
+
 \mathbf{W} = \mathbf{m} \times \mathbf{V}
+
 $$
 
 - $$m$$（量值，Magnitude）：控制權重的大小
@@ -162,11 +163,13 @@ $$
 
 ### 2️⃣ 方向更新（Direction Update）
 
-- 僅更新方向矩陣 $$V$$，採用 LoRA 風格的低秩更新
-$$
-\Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
 $$
 
+\Delta \mathbf{V} = \mathbf{A} \times \mathbf{B}
+
+$$
+
+- 僅更新方向矩陣 $$V$$，採用 LoRA 風格的低秩更新
 - 這種方法能 有效降低參數更新量，提升訓練效率 📉
 
 
@@ -178,11 +181,13 @@ $$
 
 ### 4️⃣ 權重合併（Merge）🚀（推理時）
 
-- 最終部署時，會將 $$m$$ 和 $$V$$ 的更新結果合併回原始權重：
-$$
-\mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
 $$
 
+\mathbf{W}' = (\mathbf{m} + \Delta \mathbf{m}) \times (\mathbf{V} + \Delta \mathbf{V})
+
+$$
+
+- 最終部署時，會將 $$m$$ 和 $$V$$ 的更新結果合併回原始權重：
 ✅ 優勢：
 
 - 不額外增加推理時的計算成本 🎯
@@ -193,9 +198,7 @@ $$
 
 ![image]({{ site.baseurl }}/images/197fbb85-7f9e-8054-8cd4-d99988309113.png)
 
-![image]({{ site.baseurl }}/images/197fbb85-7f9e-8055-8342-d20e483fd718.png)
-
-
+![image]({{ site.baseurl }}/images/197fbb85-7f9e-800c-ab1e-f50b49b78a63.png)
 
 
 

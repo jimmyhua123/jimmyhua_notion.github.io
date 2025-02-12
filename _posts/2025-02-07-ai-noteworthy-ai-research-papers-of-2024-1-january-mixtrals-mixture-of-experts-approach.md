@@ -1,14 +1,16 @@
 ---
 layout: post
 title: "1. January Mixtral's Mixture of Experts Approach"
-date: 2025-02-07 10:00:00 +0800
 categories: ['NotionExport']
 math: true
+date: 2025-02-12 10:00:00 +0800
 ---
 
 # Mixtral 8x7B（SMoE）與 MoE 架構比較
 
 📌 文章來源：[arXiv: 2401.04088](https://arxiv.org/abs/2401.04088)
+
+📌內文中的圖片連結 : [https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-1](https://magazine.sebastianraschka.com/p/ai-research-papers-2024-part-1)
 
 🔹 1. Mixtral 8x7B 簡介
 

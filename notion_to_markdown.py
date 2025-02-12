@@ -313,14 +313,22 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     if not os.path.exists("_posts"):
         os.makedirs("_posts")
 
-    filename = f"_posts/{slug}.md"
-
     # 查找是否已有該標題的文章
-    if os.path.exists(filename):
+    existing_files = glob.glob(f"_posts/*-{slug}.md")
+    if existing_files:
+        filename = existing_files[0]
         with open(filename, "r", encoding="utf-8") as f:
             old_full_content = f.read()
     else:
+        today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+        filename = f"_posts/{today_str}-{slug}.md"
         old_full_content = ""
+
+    # 刪除重複檔案
+    for file in existing_files:
+        if file != filename:
+            os.remove(file)
+            print(f"⚠️ 刪除重複檔案：{file}")
 
     # 提取舊的 front matter 與內容
     match = re.search(r"(?s)^---(.*?)---(.*)$", old_full_content)
@@ -331,23 +339,27 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
         old_front = ""
         old_body = old_full_content.strip()
 
+    # 正確設定 date，只在內容更新時才更新 date
+    today_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    new_date = f"{today_str} 10:00:00 +0800"
+    
+    # 更新 front matter（保留其他欄位，但不覆蓋 date）
+    front_matter_dict = {
+        "layout": "post",
+        "title": f'"{title}"',
+        "categories": categories if categories else ["NotionExport"],
+        "math": "true"
+    }
+    if old_front:
+        for line in old_front.split("\n"):
+            key, *value = line.split(":", 1)
+            key = key.strip()
+            if key != "date" and value:
+                front_matter_dict[key] = value[0].strip()
+    
     # 如果內容有更新，才更新 date
-    today_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S +0800")
     if old_body != new_markdown.strip():
-        front_matter_dict = {
-            "layout": "post",
-            "title": f'"{title}"',
-            "date": today_str,
-            "categories": categories if categories else ["NotionExport"],
-            "math": "true"
-        }
-    else:
-        front_matter_dict = {
-            "layout": "post",
-            "title": f'"{title}"',
-            "categories": categories if categories else ["NotionExport"],
-            "math": "true"
-        }
+        front_matter_dict["date"] = new_date
     
     updated_front_matter = "---\n" + "\n".join(f"{key}: {value}" for key, value in front_matter_dict.items()) + "\n---\n"
     updated_full = updated_front_matter + "\n" + new_markdown.strip() + "\n"

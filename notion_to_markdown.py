@@ -19,6 +19,7 @@ HEADERS = {
     "Notion-Version": "2022-06-28"
 }
 
+processed_pages = set()
 
 def slugify(text):
     """

@@ -3,7 +3,7 @@ layout: post
 title: "3. March: Tips for Continually Pretraining LLMs"
 categories: ['NotionExport']
 math: true
-date: 2025-02-12 10:00:00 +0800
+date: 2025-02-13 10:00:00 +0800
 ---
 
 ## 🔗 文獻來源：[arXiv:2403.08763](https://arxiv.org/abs/2403.08763)
@@ -83,8 +83,6 @@ date: 2025-02-12 10:00:00 +0800
 
   - 訓練可靈活調整，不受預設 token 數量限制。
 
-- 在不同訓練階段保持穩定學習率，減少遺忘風險。
-- 訓練可靈活調整，不受預設 token 數量限制。
 ## 5️⃣ 優化器狀態重置
 
 - 做法：當模型切換到新數據時，重置優化器狀態 (Optimizer State Reset)。
@@ -96,8 +94,6 @@ date: 2025-02-12 10:00:00 +0800
 
   - 模塊擴展 (Block Expansion)
 
-- 混合專家模型 (Mixture-of-Experts, MoE)
-- 模塊擴展 (Block Expansion)
 - 目的：允許模型學習新知識的同時，保留舊知識。
 ## 7️⃣ Tokenizer 調整
 

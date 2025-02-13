@@ -3,7 +3,7 @@ layout: post
 title: "1. January Mixtral's Mixture of Experts Approach"
 categories: ['NotionExport']
 math: true
-date: 2025-02-12 10:00:00 +0800
+date: 2025-02-13 10:00:00 +0800
 ---
 
 # Mixtral 8x7B（SMoE）與 MoE 架構比較
@@ -23,48 +23,32 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
 
   - 每個 token 僅選 2 個專家 進行計算（透過 路由網絡（Router Network） 決定）。
 
-- 每層 8 個專家（Experts）。
-- 每個 token 僅選 2 個專家 進行計算（透過 路由網絡（Router Network） 決定）。
 - 📊 參數效率
   - 總參數量：470 億（47B）。
 
   - 推論時僅使用 130 億活動參數（13B），顯著降低計算成本。
 
-- 總參數量：470 億（47B）。
-- 推論時僅使用 130 億活動參數（13B），顯著降低計算成本。
 - 🏆 性能表現
   - 超越或匹配 Llama 2 70B 和 GPT-3.5。
 
   - 在 數學、程式碼生成、多語言處理 方面表現卓越。
 
-- 超越或匹配 Llama 2 70B 和 GPT-3.5。
-- 在 數學、程式碼生成、多語言處理 方面表現卓越。
 - 🌍 多語言能力
   - 在 法語、德語、西班牙語、義大利語 等基準測試中，顯著優於 Llama 2 70B。
 
-- 在 法語、德語、西班牙語、義大利語 等基準測試中，顯著優於 Llama 2 70B。
 - 🧠 長程效能
   - 支援 32k tokens 上下文視窗。
 
   - Passkey 檢索任務達到 100% 準確度。
 
-- 支援 32k tokens 上下文視窗。
-- Passkey 檢索任務達到 100% 準確度。
 - 📌 指令微調（Instruction-Tuned Model）
   - Mixtral 8x7B – Instruct 在人類評估基準中：
   - 超越 GPT-3.5 Turbo、Claude-2.1、Gemini Pro、Llama 2 70B-chat。
 
 
-  - 超越 GPT-3.5 Turbo、Claude-2.1、Gemini Pro、Llama 2 70B-chat。
-
-- Mixtral 8x7B – Instruct 在人類評估基準中：
-  - 超越 GPT-3.5 Turbo、Claude-2.1、Gemini Pro、Llama 2 70B-chat。
-
-- 超越 GPT-3.5 Turbo、Claude-2.1、Gemini Pro、Llama 2 70B-chat。
 - 📜 開源
   - Apache 2.0 許可，可供 學術與商業用途。
 
-- Apache 2.0 許可，可供 學術與商業用途。
 - ⚖️ 模型偏差
   - 相較於 Llama 2 70B，Mixtral 在：
   - BBQ 基準測試中展現較少偏差。
@@ -72,21 +56,8 @@ Mixtral 8x7B 是一種 稀疏混合專家模型（Sparse Mixture of Experts, SMo
   - BOLD 基準測試中顯示更正向的情感傾向。
 
 
-  - BBQ 基準測試中展現較少偏差。
-
-  - BOLD 基準測試中顯示更正向的情感傾向。
-
-- 相較於 Llama 2 70B，Mixtral 在：
-  - BBQ 基準測試中展現較少偏差。
-
-  - BOLD 基準測試中顯示更正向的情感傾向。
-
-- BBQ 基準測試中展現較少偏差。
-- BOLD 基準測試中顯示更正向的情感傾向。
 - 🛠以下是架構
   
-
-
 
 
 ![image]({{ site.baseurl }}/images/192fbb85-7f9e-8029-8e3e-f7eb3b482ac6.png)
@@ -102,32 +73,25 @@ MoE 架構是 高度可擴展的神經網路，特別適用於 大型語言模�
 1. 👨‍🏫 專家（Experts）
   - 獨立的神經網路或子模型，負責特定類型的輸入數據。
 
-- 獨立的神經網路或子模型，負責特定類型的輸入數據。
 1. 📡 路由網絡（Gating Network）
   - 使用 前饋神經網路（Feedforward NN） 計算 專家權重，動態選擇適合的專家。
 
-- 使用 前饋神經網路（Feedforward NN） 計算 專家權重，動態選擇適合的專家。
 1. ⚡️ 稀疏激活（Sparse Activation）
   - 每次僅激活少數專家，降低計算成本，提高效率。
 
-- 每次僅激活少數專家，降低計算成本，提高效率。
 ### ⚙️ 運作方式
 
 1. 📥 輸入處理
   - 路由網絡計算 每個專家的相關性分數。
 
-- 路由網絡計算 每個專家的相關性分數。
 1. 🎯 選擇專家
   - 根據分數選擇 前 k 個最相關的專家（通常 k=2 或 3）。
 
   - 僅選中的專家會被激活 參與當前輸入的計算。
 
-- 根據分數選擇 前 k 個最相關的專家（通常 k=2 或 3）。
-- 僅選中的專家會被激活 參與當前輸入的計算。
 1. 📊 加權輸出
   - 各專家獨立處理數據，最後 加權融合結果。
 
-- 各專家獨立處理數據，最後 加權融合結果。
 ---
 
 ## 🔹 3. Mixtral SMoE vs. MoE 比較

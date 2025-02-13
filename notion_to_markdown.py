@@ -61,16 +61,23 @@ def fetch_notion_blocks(page_id: str) -> list:
     base_url = "https://api.notion.com/v1/blocks"
     url = f"{base_url}/{page_id}/children"
     params = {}
+    processed_blocks = set()  # 防止重複處理
 
     while True:
         resp = requests.get(url, headers=HEADERS, params=params)
         data = resp.json()
+
         for block in data.get("results", []):
-            all_blocks.append(block)
-            # 若 block 有子區塊，僅對非 image 類型進行遞迴（避免圖片重複）
-            if block.get("has_children", False) and block.get("type") != "image":
-                child_blocks = fetch_notion_blocks(block["id"])
-                all_blocks.extend(child_blocks)
+            block_id = block["id"]
+            if block_id not in processed_blocks:
+                processed_blocks.add(block_id)
+                all_blocks.append(block)
+
+                # 只對非 image 類型的 block 進行遞迴，防止重複添加
+                if block.get("has_children", False) and block["type"] != "image":
+                    child_blocks = fetch_notion_blocks(block_id)
+                    all_blocks.extend(child_blocks)
+
         if data.get("has_more"):
             params["start_cursor"] = data["next_cursor"]
         else:

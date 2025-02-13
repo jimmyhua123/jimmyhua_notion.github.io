@@ -54,63 +54,38 @@ def retrieve_page_title(page_id: str) -> tuple:
 # ----------------------------------------------------------------------
 # 3. 取得某頁面下的所有區塊 (含分頁處理)
 # ----------------------------------------------------------------------
-def fetch_notion_blocks(page_id: str, processed_blocks=None) -> list:
+def fetch_notion_blocks(page_id: str) -> list:
     """
-    回傳所有 blocks（list），不包含子頁面下層
+    回傳指定 page_id 的直接 children 區塊，不進行遞迴
     """
-    if processed_blocks is None:
-        processed_blocks = set()  # 初始化只在最外層做一次
-
     all_blocks = []
     base_url = "https://api.notion.com/v1/blocks"
     url = f"{base_url}/{page_id}/children"
     params = {}
-
     while True:
         resp = requests.get(url, headers=HEADERS, params=params)
         data = resp.json()
-
-        for block in data.get("results", []):
-            block_id = block["id"]
-            if block_id not in processed_blocks:
-                processed_blocks.add(block_id)
-                all_blocks.append(block)
-
-                # 只對非 image 類型的 block 進行遞迴，避免重複
-                if block.get("has_children", False) and block["type"] != "image":
-                    child_blocks = fetch_notion_blocks(block_id, processed_blocks)
-                    all_blocks.extend(child_blocks)
-
+        all_blocks.extend(data.get("results", []))
         if data.get("has_more"):
             params["start_cursor"] = data["next_cursor"]
         else:
             break
-
     return all_blocks
 
-
 # ----------------------------------------------------------------------
-# 新增函式：下載圖片並儲存到本機
+# 4. 下載圖片並儲存到本機
 # ----------------------------------------------------------------------
 def download_image(image_url: str, block_id: str) -> str:
-    """
-    下載圖片並儲存到本機 images 資料夾，回傳圖片的相對路徑 (供 Markdown 使用)
-    """
     images_dir = "images"
     if not os.path.exists(images_dir):
         os.makedirs(images_dir)
-
-    # 利用 urlparse 解析圖片 URL，取得檔案路徑與副檔名
     parsed_url = urlparse(image_url)
     path = parsed_url.path
     ext = os.path.splitext(path)[1]
     if not ext:
-        ext = ".jpg"  # 預設副檔名
-
+        ext = ".jpg"
     local_filename = f"{block_id}{ext}"
     local_path = os.path.join(images_dir, local_filename)
-
-    # 若圖片尚未下載，則進行下載
     if not os.path.exists(local_path):
         try:
             r = requests.get(image_url, stream=True, timeout=10)
@@ -125,14 +100,7 @@ def download_image(image_url: str, block_id: str) -> str:
             print(f"下載圖片失敗: {image_url}，錯誤: {e}")
     else:
         print(f"圖片已存在，跳過下載: {local_path}")
-
-    # 回傳圖片在網站中的相對路徑
-    # 此處採用絕對路徑 '/images/filename'，若需要相對路徑請自行調整
     return f"{{{{ site.baseurl }}}}/images/{local_filename}"
-
-# ----------------------------------------------------------------------
-# 4. 將單一 block 轉成 Markdown（忽略 child_page）
-# ----------------------------------------------------------------------
 
 
 def rich_text_array_to_markdown(rich_text_array: list) -> str:
@@ -141,98 +109,71 @@ def rich_text_array_to_markdown(rich_text_array: list) -> str:
     
     for rt in rich_text_array:
         text_content = rt.get("plain_text", "")
-        # 進行替換：將所有 $...$ 換成 $$...$$
         def replace_math(match):
-                    content = match.group(1)
-                    # 若內容前後已包含 $$，則不再替換
-                    if content.startswith('$') and content.endswith('$'):
-                        return match.group(0)
-                    return "$$" + content + "$$"
-        
-        new_text = inline_math_pattern.sub(replace_math, text_content)    
-        # 印出除錯資訊，檢查轉換前後的差異
-        # print("原始文本：", text_content)
-        # print("替換後：", new_text)
-        
+            content = match.group(1)
+            if content.startswith('$') and content.endswith('$'):
+                return match.group(0)
+            return "$$" + content + "$$"
+        new_text = inline_math_pattern.sub(replace_math, text_content)
         link_url = None
         if rt.get("href"):
             link_url = rt.get("href")
         elif rt.get("text") and rt["text"].get("link"):
             link_url = rt["text"]["link"].get("url")
-        
         if link_url:
             md_text_parts.append(f"[{new_text}]({link_url})")
         else:
             md_text_parts.append(new_text)
-    result = "".join(md_text_parts)
-    # print("最終轉換結果：", result)
-    return result
+    return "".join(md_text_parts)
 
 def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
-    """
-    將單一 Notion block 轉為 Markdown 的字串。
-    示範常見的 block 類型：paragraph, heading, list, equation, code, image, divider, quote, table 等。
-    """
     btype = block.get("type", "")
-
-    # 1. 段落 paragraph
+    # 段落
     if btype == "paragraph":
         texts = block[btype].get("rich_text", [])
-        paragraph_text = rich_text_array_to_markdown(texts)
-        return paragraph_text + "\n\n"
-
-    # 2. 標題 heading_1 / heading_2 / heading_3
+        return rich_text_array_to_markdown(texts) + "\n\n"
+    # 標題
     elif btype == "heading_1":
         texts = block[btype].get("rich_text", [])
-        heading_text = rich_text_array_to_markdown(texts)
-        return f"# {heading_text}\n\n"
-
+        return f"# {rich_text_array_to_markdown(texts)}\n\n"
     elif btype == "heading_2":
         texts = block[btype].get("rich_text", [])
-        heading_text = rich_text_array_to_markdown(texts)
-        return f"## {heading_text}\n\n"
-
+        return f"## {rich_text_array_to_markdown(texts)}\n\n"
     elif btype == "heading_3":
         texts = block[btype].get("rich_text", [])
-        heading_text = rich_text_array_to_markdown(texts)
-        return f"### {heading_text}\n\n"
-
-    # 3. 清單 bulleted_list_item / numbered_list_item
+        return f"### {rich_text_array_to_markdown(texts)}\n\n"
+    # 清單：僅取得直接子區塊，遞迴處理子區塊
     elif btype == "bulleted_list_item":
         texts = block[btype].get("rich_text", [])
         list_text = rich_text_array_to_markdown(texts)
         if block.get("has_children", False):
-            sub_blocks = fetch_notion_blocks(block["id"])
-            sub_texts = [block_to_markdown(sub) for sub in sub_blocks]
-            sub_content = "\n  ".join(sub_texts)
+            child_blocks = fetch_notion_blocks(block["id"])
+            child_texts = [block_to_markdown(child) for child in child_blocks]
+            sub_content = "\n  ".join(child_texts)
             return f"- {list_text}\n  {sub_content}\n"
         else:
             return f"- {list_text}\n"
-
     elif btype == "numbered_list_item":
         texts = block[btype].get("rich_text", [])
         list_text = rich_text_array_to_markdown(texts)
         if block.get("has_children", False):
-            sub_blocks = fetch_notion_blocks(block["id"])
-            sub_texts = [block_to_markdown(sub) for sub in sub_blocks]
-            sub_content = "\n  ".join(sub_texts)
+            child_blocks = fetch_notion_blocks(block["id"])
+            child_texts = [block_to_markdown(child) for child in child_blocks]
+            sub_content = "\n  ".join(child_texts)
             return f"1. {list_text}\n  {sub_content}\n"
         else:
             return f"1. {list_text}\n"
-
-    # 4. 數學方程式 equation
+    # 數學方程式
     elif btype == "equation":
         equation_text = block[btype].get("expression", "")
         return f"$$\n{equation_text}\n$$\n\n"
-
-    # 5. 程式碼 code
+    # 程式碼
     elif btype == "code":
         texts = block[btype].get("rich_text", [])
         code_text = "".join(rich_text_array_to_markdown([t]) for t in texts)
         language = block[btype].get("language", "plaintext")
         return f"```{language}\n{code_text}\n```\n\n"
-
-    # 6. 圖片 image（優化圖片處理：下載圖片並引用本地路徑）
+    # 圖片
     elif btype == "image":
         image_data = block[btype]
         if image_data.get("type") == "external":
@@ -241,18 +182,14 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
             url = image_data["file"].get("url", "")
         local_url = download_image(url, block["id"])
         return f"![image]({local_url})\n\n"
-
-    # 7. 分隔線 divider
+    # 分隔線
     elif btype == "divider":
         return "---\n\n"
-
-    # 8. 引言 quote
+    # 引言
     elif btype == "quote":
         texts = block[btype].get("rich_text", [])
-        quote_text = rich_text_array_to_markdown(texts)
-        return f"> {quote_text}\n\n"
-
-    # 9. 表格 table
+        return f"> {rich_text_array_to_markdown(texts)}\n\n"
+    # 表格
     elif btype == "table":
         table_info = block.get("table", {})
         table_width = table_info.get("table_width", 3)
@@ -267,59 +204,13 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
                 md_row = " | ".join(rich_text_array_to_markdown(cell) for cell in cells)
                 md_table.append(f"| {md_row} |")
         if md_table:
-            # 插入表頭與分隔線
             separator = "| " + " | ".join(["---"] * table_width) + " |"
             md_table.insert(1, separator)
         return "\n".join(md_table) + "\n\n"
-
-    # 若遇到 child_page / child_database，則交由外層遞迴處理
+    # child_page 與 child_database 不在此處理
     elif btype in ["child_page", "child_database"]:
         return ""
-
-    # 其他不支援的 block 類型，回傳空字串
     return ""
-# ----------------------------------------------------------------------
-# 5. 遞迴函式：parse_and_export_recursively()
-# ----------------------------------------------------------------------
-
-def parse_and_export_recursively(page_id: str, parent_slug: str = None):
-    global processed_pages
-
-    if page_id in processed_pages:
-        print(f"⚠️ 頁面 {page_id} 已處理，跳過重複操作")
-        return
-
-    processed_pages.add(page_id)
-
-    # 取得標題與 slug
-    page_title, slug = retrieve_page_title(page_id)
-    if parent_slug:
-        slug = f"{parent_slug}-{slug}"
-
-    # 取得頁面內容 Blocks
-    blocks = fetch_notion_blocks(page_id)
-    page_markdown_parts = []
-    child_pages = []
-
-    for block in blocks:
-        btype = block.get("type", "")
-        if btype == "child_page":
-            child_pages.append(block)
-        else:
-            page_markdown_parts.append(block_to_markdown(block, article_title=page_title))
-
-    # 合成 Markdown 內容
-    page_markdown = "".join(page_markdown_parts)
-
-    # 若沒有子頁面則生成文章
-    if not child_pages:
-        upsert_post_with_date_update(slug, page_title, page_markdown, categories=["NotionExport"])
-
-    # 遞迴處理子頁面
-    for child_block in child_pages:
-        child_id = child_block["id"]
-        parse_and_export_recursively(child_id, parent_slug=slug)
-
 
 def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     if not os.path.exists("_posts"):
@@ -383,18 +274,38 @@ def upsert_post_with_date_update(slug, title, new_markdown, categories=None):
     else:
         print(f"[NO CHANGE] {filename} 內容未變更，日期保持原樣")
 
-# ----------------------------------------------------------------------
-# 7. Main：指定最上層頁面ID，開始遞迴
-# ----------------------------------------------------------------------
+processed_pages = set()
+def parse_and_export_recursively(page_id: str, parent_slug: str = None):
+    global processed_pages
+    if page_id in processed_pages:
+        print(f"⚠️ 頁面 {page_id} 已處理，跳過")
+        return
+    processed_pages.add(page_id)
+    page_title, slug = retrieve_page_title(page_id)
+    if parent_slug:
+        slug = f"{parent_slug}-{slug}"
+    blocks = fetch_notion_blocks(page_id)
+    page_markdown_parts = []
+    child_pages = []
+    for block in blocks:
+        if block.get("type") == "child_page":
+            child_pages.append(block)
+        else:
+            page_markdown_parts.append(block_to_markdown(block, article_title=page_title))
+    page_markdown = "".join(page_markdown_parts)
+    if not child_pages:
+        upsert_post_with_date_update(slug, page_title, page_markdown, categories=["NotionExport"])
+    for child_block in child_pages:
+        child_id = child_block["id"]
+        parse_and_export_recursively(child_id, parent_slug=slug)
+
+# 以下省略 retrieve_page_title 與 upsert_post_with_date_update 等其他函式...
+# 主程式執行
 def main():
-    """
-    主函式：從 Notion 獲取所有頁面，遞迴轉換為 Markdown，並儲存到 _posts/ 目錄。
-    """
     print("🚀 開始匯出 Notion 內容...")
-    
     try:
         parse_and_export_recursively(ROOT_PAGE_ID)
-        print("🎉 全部頁面（含子頁面）匯出完成！")
+        print("🎉 全部頁面匯出完成！")
     except Exception as e:
         print(f"❌ 錯誤發生：{e}")
         import traceback

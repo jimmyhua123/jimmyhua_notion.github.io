@@ -53,15 +53,17 @@ def retrieve_page_title(page_id: str) -> tuple:
 # ----------------------------------------------------------------------
 # 3. 取得某頁面下的所有區塊 (含分頁處理)
 # ----------------------------------------------------------------------
-def fetch_notion_blocks(page_id: str) -> list:
+def fetch_notion_blocks(page_id: str, processed_blocks=None) -> list:
     """
     回傳所有 blocks（list），不包含子頁面下層
     """
+    if processed_blocks is None:
+        processed_blocks = set()  # 初始化只在最外層做一次
+
     all_blocks = []
     base_url = "https://api.notion.com/v1/blocks"
     url = f"{base_url}/{page_id}/children"
     params = {}
-    processed_blocks = set()  # 防止重複處理
 
     while True:
         resp = requests.get(url, headers=HEADERS, params=params)
@@ -73,15 +75,16 @@ def fetch_notion_blocks(page_id: str) -> list:
                 processed_blocks.add(block_id)
                 all_blocks.append(block)
 
-                # 只對非 image 類型的 block 進行遞迴，防止重複添加
+                # 只對非 image 類型的 block 進行遞迴，避免重複
                 if block.get("has_children", False) and block["type"] != "image":
-                    child_blocks = fetch_notion_blocks(block_id)
+                    child_blocks = fetch_notion_blocks(block_id, processed_blocks)
                     all_blocks.extend(child_blocks)
 
         if data.get("has_more"):
             params["start_cursor"] = data["next_cursor"]
         else:
             break
+
     return all_blocks
 
 # ----------------------------------------------------------------------
@@ -169,6 +172,7 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
     示範常見的 block 類型：paragraph, heading, list, equation, code, image, divider, quote, table 等。
     """
     btype = block.get("type", "")
+
     # 1. 段落 paragraph
     if btype == "paragraph":
         texts = block[btype].get("rich_text", [])
@@ -261,6 +265,7 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
                 md_row = " | ".join(rich_text_array_to_markdown(cell) for cell in cells)
                 md_table.append(f"| {md_row} |")
         if md_table:
+            # 插入表頭與分隔線
             separator = "| " + " | ".join(["---"] * table_width) + " |"
             md_table.insert(1, separator)
         return "\n".join(md_table) + "\n\n"
@@ -271,7 +276,6 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
 
     # 其他不支援的 block 類型，回傳空字串
     return ""
-
 # ----------------------------------------------------------------------
 # 5. 遞迴函式：parse_and_export_recursively()
 # ----------------------------------------------------------------------

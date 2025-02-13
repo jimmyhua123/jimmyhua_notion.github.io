@@ -175,13 +175,20 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
         return f"```{language}\n{code_text}\n```\n\n"
     # 圖片
     elif btype == "image":
-        image_data = block[btype]
+        image_data = block.get("image", {})
+        # 檢查是否為 external 或 file
         if image_data.get("type") == "external":
-            url = image_data["external"].get("url", "")
+            url = image_data.get("external", {}).get("url", "")
+        elif image_data.get("type") == "file":
+            url = image_data.get("file", {}).get("url", "")
         else:
-            url = image_data["file"].get("url", "")
+            url = ""
+    # 如果 URL 是 attachment 格式，直接回傳原始連結
+        if url.startswith("attachment:"):
+            return f"![image]({url})\n\n"
         local_url = download_image(url, block["id"])
         return f"![image]({local_url})\n\n"
+
     # 分隔線
     elif btype == "divider":
         return "---\n\n"

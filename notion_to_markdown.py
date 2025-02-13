@@ -87,6 +87,7 @@ def fetch_notion_blocks(page_id: str, processed_blocks=None) -> list:
 
     return all_blocks
 
+
 # ----------------------------------------------------------------------
 # 新增函式：下載圖片並儲存到本機
 # ----------------------------------------------------------------------
@@ -279,7 +280,6 @@ def block_to_markdown(block: dict, article_title: str = "untitled") -> str:
 # ----------------------------------------------------------------------
 # 5. 遞迴函式：parse_and_export_recursively()
 # ----------------------------------------------------------------------
-processed_pages = set()  # 全域集合，用來記錄已處理的 page_id
 
 def parse_and_export_recursively(page_id: str, parent_slug: str = None):
     global processed_pages

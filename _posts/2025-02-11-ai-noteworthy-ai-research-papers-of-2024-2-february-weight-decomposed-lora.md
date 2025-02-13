@@ -3,7 +3,7 @@ layout: post
 title: "2. February: Weight-decomposed LoRA"
 categories: ['NotionExport']
 math: true
-date: 2025-02-12 10:00:00 +0800
+date: 2025-02-13 10:00:00 +0800
 ---
 
 # 📚 參考文獻
@@ -55,10 +55,12 @@ $$
 ### 2️⃣ 前向傳遞
 
 $$
+
 \text{output} = (\mathbf{W} + \mathbf{BA})\mathbf{x}
-$$$
+
+$$ 
+
 - 當輸入通過模型層時，原始權重 $$W$$ 和低秩更新 $$BA$$ 的輸出會相加，其中 $$x$$ 是輸入向量：
-  
 
 
 
